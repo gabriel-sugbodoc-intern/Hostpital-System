@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480">
+  <rect width="400" height="480" fill="#000"/>
+  <!-- Header -->
+  <text x="8" y="16" fill="#00cc88" font-family="monospace" font-size="10">2D ECHO · APICAL 4-CHAMBER · 28 JUN 2026</text>
+  <text x="8" y="28" fill="#009966" font-family="monospace" font-size="9">CEBU DOCTORS' · CARDIAC IMAGING · EF 62%</text>
+  <!-- Sector scan background -->
+  <path d="M200,50 L30,430 Q200,460 370,430 Z" fill="#0a0a1a"/>
+  <!-- Scan depth grid -->
+  <line x1="200" y1="50" x2="30" y2="430" stroke="#002200" stroke-width="0.5"/>
+  <line x1="200" y1="50" x2="115" y2="440" stroke="#002200" stroke-width="0.5"/>
+  <line x1="200" y1="50" x2="200" y2="450" stroke="#002200" stroke-width="0.5"/>
+  <line x1="200" y1="50" x2="285" y2="440" stroke="#002200" stroke-width="0.5"/>
+  <line x1="200" y1="50" x2="370" y2="430" stroke="#002200" stroke-width="0.5"/>
+  <!-- Depth arcs -->
+  <path d="M110,190 Q200,165 290,190" stroke="#002200" stroke-width="0.5" fill="none"/>
+  <path d="M70,290 Q200,258 330,290" stroke="#002200" stroke-width="0.5" fill="none"/>
+  <path d="M45,380 Q200,345 355,380" stroke="#002200" stroke-width="0.5" fill="none"/>
+  <!-- LV (Left Ventricle) - large chamber, lower left -->
+  <path d="M130,230 Q105,300 115,370 Q150,410 190,415 Q200,415 200,415 L200,220 Q165,210 130,230" fill="#1a6633"/>
+  <!-- RV (Right Ventricle) - upper right of sector -->
+  <path d="M200,150 Q230,145 265,165 Q285,200 275,240 Q260,260 235,265 L200,250 Z" fill="#1a4d33"/>
+  <!-- LA (Left Atrium) - behind LV -->
+  <path d="M155,220 Q175,185 200,180 L200,220 Q180,225 155,220" fill="#144d2a"/>
+  <!-- RA (Right Atrium) - upper right -->
+  <path d="M200,150 Q215,135 240,130 Q270,140 280,165 Q275,195 265,165 Q230,145 200,150" fill="#0f3d22"/>
+  <!-- Valve lines (mitral) -->
+  <path d="M168,222 L200,238 L220,218" stroke="#00ff88" stroke-width="1.5" fill="none" opacity="0.8"/>
+  <!-- Valve lines (tricuspid) -->
+  <path d="M200,248 L220,260 L245,245" stroke="#00ff88" stroke-width="1.5" fill="none" opacity="0.7"/>
+  <!-- Speckle texture -->
+  <circle cx="145" cy="300" r="2" fill="#33ff99" opacity="0.4"/>
+  <circle cx="165" cy="280" r="1.5" fill="#33ff99" opacity="0.3"/>
+  <circle cx="180" cy="320" r="2" fill="#33ff99" opacity="0.35"/>
+  <circle cx="155" cy="350" r="1.5" fill="#33ff99" opacity="0.3"/>
+  <circle cx="170" cy="370" r="2" fill="#33ff99" opacity="0.4"/>
+  <circle cx="135" cy="340" r="1" fill="#33ff99" opacity="0.25"/>
+  <circle cx="240" cy="200" r="2" fill="#33ff99" opacity="0.3"/>
+  <circle cx="255" cy="220" r="1.5" fill="#33ff99" opacity="0.25"/>
+  <circle cx="230" cy="235" r="1" fill="#33ff99" opacity="0.2"/>
+  <!-- Depth markers (right side) -->
+  <text x="368" y="200" fill="#009966" font-family="monospace" font-size="9">2cm</text>
+  <text x="368" y="295" fill="#009966" font-family="monospace" font-size="9">5cm</text>
+  <text x="368" y="385" fill="#009966" font-family="monospace" font-size="9">8cm</text>
+  <!-- Labels -->
+  <text x="135" y="290" fill="#00ff88" font-family="monospace" font-size="9" opacity="0.8">LV</text>
+  <text x="238" y="215" fill="#00ff88" font-family="monospace" font-size="9" opacity="0.8">RV</text>
+  <text x="162" y="205" fill="#00ff88" font-family="monospace" font-size="9" opacity="0.8">LA</text>
+  <text x="245" y="165" fill="#00ff88" font-family="monospace" font-size="9" opacity="0.8">RA</text>
+  <!-- HR indicator -->
+  <text x="8" y="460" fill="#00cc88" font-family="monospace" font-size="10">HR: 78 bpm  EF: 62%  LVEF PRESERVED</text>
+  <text x="8" y="472" fill="#009966" font-family="monospace" font-size="9">IMPRESSION: NORMAL BIVENTRICULAR FUNCTION</text>
+</svg>

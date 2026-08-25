@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500">
+  <rect width="400" height="500" fill="#0d0d0d"/>
+  <!-- Header text -->
+  <text x="10" y="16" fill="#999" font-family="monospace" font-size="10">PA CHEST · 15 JUL 2026 09:14</text>
+  <text x="10" y="28" fill="#777" font-family="monospace" font-size="9">kV:110  mAs:5  CHONG HUA RADIOLOGY</text>
+  <!-- Clavicles -->
+  <path d="M40,70 Q140,58 192,78 M360,70 Q260,58 208,78" stroke="#c0c0c0" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <!-- Neck/trachea -->
+  <rect x="189" y="38" width="22" height="90" rx="11" fill="#1a1a1a"/>
+  <rect x="195" y="38" width="10" height="90" rx="5" fill="#111"/>
+  <!-- Left lung field (viewer right = patient left) -->
+  <path d="M192,80 Q80,90 50,200 Q30,310 60,410 Q100,445 155,445 Q175,445 192,430 Z" fill="#1e1e1e"/>
+  <!-- Right lung field -->
+  <path d="M208,80 Q320,90 350,200 Q370,310 340,410 Q300,445 245,445 Q225,445 208,430 Z" fill="#1e1e1e"/>
+  <!-- Heart silhouette (left-of-center, soft tissue) -->
+  <ellipse cx="196" cy="315" rx="72" ry="88" fill="#3c3c3c"/>
+  <ellipse cx="190" cy="320" rx="60" ry="75" fill="#444"/>
+  <!-- Aortic knuckle -->
+  <ellipse cx="170" cy="175" rx="22" ry="18" fill="#3a3a3a"/>
+  <!-- Spine - central bright line -->
+  <rect x="196" y="78" width="8" height="350" rx="4" fill="#666"/>
+  <!-- Vertebral bodies -->
+  <circle cx="200" cy="110" r="7" fill="#555" opacity="0.7"/>
+  <circle cx="200" cy="138" r="7" fill="#555" opacity="0.7"/>
+  <circle cx="200" cy="166" r="7" fill="#555" opacity="0.7"/>
+  <circle cx="200" cy="194" r="7" fill="#555" opacity="0.7"/>
+  <circle cx="200" cy="222" r="7" fill="#555" opacity="0.7"/>
+  <circle cx="200" cy="250" r="7" fill="#555" opacity="0.7"/>
+  <circle cx="200" cy="278" r="7" fill="#555" opacity="0.7"/>
+  <circle cx="200" cy="306" r="7" fill="#555" opacity="0.7"/>
+  <circle cx="200" cy="334" r="7" fill="#555" opacity="0.7"/>
+  <circle cx="200" cy="362" r="7" fill="#555" opacity="0.7"/>
+  <circle cx="200" cy="390" r="7" fill="#555" opacity="0.7"/>
+  <!-- Ribs right (patient left) -->
+  <path d="M208,88 Q295,100 345,155" stroke="#c0c0c0" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M208,110 Q298,126 348,185" stroke="#b8b8b8" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M208,132 Q298,152 346,215" stroke="#b8b8b8" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M208,154 Q296,178 342,246" stroke="#b0b0b0" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M208,176 Q292,206 336,278" stroke="#b0b0b0" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M208,198 Q286,232 326,308" stroke="#a8a8a8" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M208,220 Q278,256 314,336" stroke="#a8a8a8" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M208,242 Q270,278 302,362" stroke="#a0a0a0" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Ribs left (patient right) -->
+  <path d="M192,88 Q105,100 55,155" stroke="#c0c0c0" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M192,110 Q102,126 52,185" stroke="#b8b8b8" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M192,132 Q102,152 54,215" stroke="#b8b8b8" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M192,154 Q104,178 58,246" stroke="#b0b0b0" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M192,176 Q108,206 64,278" stroke="#b0b0b0" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M192,198 Q114,232 74,308" stroke="#a8a8a8" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M192,220 Q122,256 86,336" stroke="#a8a8a8" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M192,242 Q130,278 98,362" stroke="#a0a0a0" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Diaphragm -->
+  <path d="M48,430 Q125,408 200,418 Q275,408 352,430" stroke="#aaa" stroke-width="3" fill="none"/>
+  <!-- Costophrenic angles (sharp) -->
+  <path d="M48,430 L55,450" stroke="#999" stroke-width="2" fill="none"/>
+  <path d="M352,430 L345,450" stroke="#999" stroke-width="2" fill="none"/>
+  <!-- R / L markers -->
+  <text x="18" y="185" fill="#ddd" font-family="Arial Black" font-size="22" font-weight="900" opacity="0.9">R</text>
+  <text x="368" y="185" fill="#ddd" font-family="Arial Black" font-size="22" font-weight="900" opacity="0.9">L</text>
+  <!-- Bottom info -->
+  <text x="10" y="492" fill="#555" font-family="monospace" font-size="9">IMPRESSION: NO ACUTE CARDIOPULMONARY PROCESS</text>
+</svg>

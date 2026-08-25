@@ -1,0 +1,6 @@
+{
+  "name": "SugboDoc Connect",
+  "description": "Healthcare and clinical management portal connecting patients, doctors, and administrators",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

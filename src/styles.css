@@ -1,0 +1,279 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * SugboDoc design system — unified across the public landing page,
+ * the patient portal and the admin/doctor console.
+ *
+ * Values are HSL triplets on :root / .dark and mapped to Tailwind
+ * utilities in @theme inline via hsl(var(--token)).
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-ring-offset-background: hsl(var(--background));
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+  --color-brand-deep: hsl(var(--brand-deep));
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-mono);
+}
+
+:root {
+  --radius: 0.5rem;
+
+  /* Deep teal primary - clinical authority */
+  --primary: 174 65% 28%;
+  --primary-foreground: 40 100% 98%;
+
+  /* Warm cream background - reduces eye strain */
+  --background: 40 30% 97%;
+  --foreground: 210 20% 12%;
+
+  --card: 40 40% 99%;
+  --card-foreground: 210 20% 12%;
+  --popover: 40 40% 99%;
+  --popover-foreground: 210 20% 12%;
+
+  --secondary: 174 25% 94%;
+  --secondary-foreground: 174 65% 22%;
+
+  --muted: 40 20% 92%;
+  --muted-foreground: 210 12% 45%;
+
+  --accent: 174 40% 92%;
+  --accent-foreground: 174 65% 28%;
+
+  --destructive: 12 85% 55%;
+  --destructive-foreground: 40 100% 98%;
+
+  --border: 40 20% 88%;
+  --input: 40 20% 88%;
+  --ring: 174 65% 28%;
+
+  --brand-deep: 190 55% 18%;
+
+  --chart-1: 174 65% 38%;
+  --chart-2: 195 75% 45%;
+  --chart-3: 12 85% 55%;
+  --chart-4: 40 85% 55%;
+  --chart-5: 280 55% 55%;
+
+  --sidebar: 40 40% 99%;
+  --sidebar-foreground: 210 20% 12%;
+  --sidebar-primary: 174 65% 28%;
+  --sidebar-primary-foreground: 40 100% 98%;
+  --sidebar-accent: 174 40% 92%;
+  --sidebar-accent-foreground: 174 65% 28%;
+  --sidebar-border: 40 20% 88%;
+  --sidebar-ring: 174 65% 28%;
+
+  --gradient-hero: linear-gradient(135deg, hsl(174 40% 94%), hsl(40 45% 98%));
+  --shadow-soft: 0 12px 30px -14px hsl(190 55% 18% / 0.35);
+
+  --font-display: "Plus Jakarta Sans", "Geist", system-ui, sans-serif;
+  --font-body: "Geist", "Inter", system-ui, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, monospace;
+}
+
+.dark {
+  --primary: 174 50% 45%;
+  --primary-foreground: 210 30% 8%;
+
+  --background: 210 30% 8%;
+  --foreground: 40 20% 95%;
+
+  --card: 210 25% 12%;
+  --card-foreground: 40 20% 95%;
+  --popover: 210 25% 12%;
+  --popover-foreground: 40 20% 95%;
+
+  --secondary: 210 20% 18%;
+  --secondary-foreground: 40 20% 95%;
+
+  --muted: 210 20% 18%;
+  --muted-foreground: 40 10% 65%;
+
+  --accent: 174 30% 20%;
+  --accent-foreground: 174 50% 75%;
+
+  --destructive: 12 75% 50%;
+  --destructive-foreground: 40 100% 98%;
+
+  --border: 210 20% 22%;
+  --input: 210 20% 22%;
+  --ring: 174 50% 45%;
+
+  --brand-deep: 174 50% 75%;
+
+  --sidebar: 210 25% 12%;
+  --sidebar-foreground: 40 20% 95%;
+  --sidebar-primary: 174 50% 45%;
+  --sidebar-primary-foreground: 210 30% 8%;
+  --sidebar-accent: 174 30% 20%;
+  --sidebar-accent-foreground: 174 50% 75%;
+  --sidebar-border: 210 20% 22%;
+  --sidebar-ring: 174 50% 45%;
+
+  --gradient-hero: linear-gradient(135deg, hsl(174 30% 16%), hsl(210 30% 10%));
+  --shadow-soft: 0 12px 30px -14px hsl(210 40% 2% / 0.6);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-body);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Scrollbar styling */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-skeleton {
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.slide-up {
+  animation: slide-up 0.4s ease-out;
+}
+
+/* Status badge variants shared by portal + admin views */
+@utility status-active {
+  background-color: var(--color-emerald-50);
+  color: var(--color-emerald-700);
+  border-color: var(--color-emerald-200);
+}
+
+@utility status-pending {
+  background-color: var(--color-amber-50);
+  color: var(--color-amber-700);
+  border-color: var(--color-amber-200);
+}
+
+@utility status-completed {
+  background-color: var(--color-gray-50);
+  color: var(--color-gray-600);
+  border-color: var(--color-gray-200);
+}
+
+@utility status-cancelled {
+  background-color: var(--color-red-50);
+  color: var(--color-red-700);
+  border-color: var(--color-red-200);
+}
+
+@utility status-low-stock {
+  background-color: var(--color-orange-50);
+  color: var(--color-orange-700);
+  border-color: var(--color-orange-200);
+}
+
+@utility status-out-of-stock {
+  background-color: var(--color-red-50);
+  color: var(--color-red-700);
+  border-color: var(--color-red-200);
+}

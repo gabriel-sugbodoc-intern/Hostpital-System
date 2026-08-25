@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480">
+  <rect width="400" height="480" fill="#0a0a0a"/>
+  <!-- Header -->
+  <text x="8" y="16" fill="#aaa" font-family="monospace" font-size="10">MRI BRAIN · T2 AXIAL · W/O CONTRAST</text>
+  <text x="8" y="28" fill="#777" font-family="monospace" font-size="9">3.0T · TR:5000 TE:90 · 10 JUL 2026</text>
+  <!-- Scalp / skull outer (fat = bright on T2) -->
+  <ellipse cx="200" cy="245" rx="158" ry="178" fill="#c8a878"/>
+  <!-- Skull bone (dark on T2) -->
+  <ellipse cx="200" cy="245" rx="148" ry="168" fill="#1a1a1a"/>
+  <!-- Dura -->
+  <ellipse cx="200" cy="245" rx="140" ry="160" fill="#2a2a2a"/>
+  <!-- Brain parenchyma - gray matter cortex (darker on T2) -->
+  <ellipse cx="200" cy="245" rx="130" ry="150" fill="#555"/>
+  <!-- Gyral folds detail (T2: gray matter darker than white matter) -->
+  <ellipse cx="200" cy="245" rx="130" ry="150" fill="none" stroke="#3a3a3a" stroke-width="8" stroke-dasharray="18,7" opacity="0.8"/>
+  <ellipse cx="200" cy="245" rx="130" ry="150" fill="none" stroke="#333" stroke-width="4" stroke-dasharray="10,14" opacity="0.5"/>
+  <!-- White matter (bright on T2) -->
+  <ellipse cx="200" cy="245" rx="108" ry="128" fill="#888"/>
+  <!-- Deep gray (thalami, BG - slightly darker) -->
+  <ellipse cx="172" cy="238" rx="22" ry="18" fill="#555"/>
+  <ellipse cx="228" cy="238" rx="22" ry="18" fill="#555"/>
+  <!-- Caudate heads -->
+  <ellipse cx="165" cy="215" rx="14" ry="10" fill="#4a4a4a"/>
+  <ellipse cx="235" cy="215" rx="14" ry="10" fill="#4a4a4a"/>
+  <!-- Lateral ventricles (CSF = very bright on T2) -->
+  <path d="M165,205 Q182,192 200,195 Q200,195 200,195 L200,225 Q185,232 170,225 Q163,218 165,205" fill="#dde8ff"/>
+  <path d="M235,205 Q218,192 200,195 L200,225 Q215,232 230,225 Q237,218 235,205" fill="#dde8ff"/>
+  <!-- Third ventricle -->
+  <rect x="196" y="240" width="8" height="28" rx="4" fill="#dde8ff"/>
+  <!-- Sylvian fissures (CSF bright) -->
+  <path d="M108,218 Q85,245 108,272" stroke="#ccd8ff" stroke-width="5" fill="none" opacity="0.8"/>
+  <path d="M292,218 Q315,245 292,272" stroke="#ccd8ff" stroke-width="5" fill="none" opacity="0.8"/>
+  <!-- Interhemispheric fissure -->
+  <line x1="200" y1="97" x2="200" y2="395" stroke="#1a1a1a" stroke-width="4"/>
+  <!-- Occipital lobes -->
+  <ellipse cx="200" cy="355" rx="75" ry="42" fill="#505050"/>
+  <!-- Cerebellum hint -->
+  <ellipse cx="200" cy="380" rx="55" ry="28" fill="#444"/>
+  <!-- Annotations -->
+  <text x="8" y="460" fill="#888" font-family="monospace" font-size="10">TR:5000  TE:90  SLICE 16/28</text>
+  <text x="8" y="472" fill="#555" font-family="monospace" font-size="9">IMPRESSION: NO ACUTE INTRACRANIAL ABNORMALITY</text>
+</svg>

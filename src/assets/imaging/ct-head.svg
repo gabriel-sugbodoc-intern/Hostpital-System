@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480">
+  <rect width="400" height="480" fill="#000"/>
+  <!-- Header -->
+  <text x="8" y="16" fill="#999" font-family="monospace" font-size="10">CT HEAD W/O CONTRAST · AXIAL</text>
+  <text x="8" y="28" fill="#777" font-family="monospace" font-size="9">SLICE 18/24 · 5.0mm · 05 JUL 2026</text>
+  <!-- Outer skull (bone - bright white) -->
+  <ellipse cx="200" cy="240" rx="155" ry="175" fill="#d4d4d4"/>
+  <!-- Inner skull table -->
+  <ellipse cx="200" cy="240" rx="143" ry="163" fill="#b8b8b8"/>
+  <!-- Outer brain surface (cortex) -->
+  <ellipse cx="200" cy="240" rx="130" ry="150" fill="#7a7a7a"/>
+  <!-- White matter (inner, brighter) -->
+  <ellipse cx="200" cy="240" rx="105" ry="125" fill="#8c8c8c"/>
+  <!-- Gray matter cortex convolutions -->
+  <ellipse cx="200" cy="240" rx="130" ry="150" fill="none" stroke="#606060" stroke-width="6" stroke-dasharray="14,6"/>
+  <!-- Sylvian fissure right -->
+  <path d="M295,210 Q315,240 295,270" stroke="#222" stroke-width="4" fill="none"/>
+  <!-- Sylvian fissure left -->
+  <path d="M105,210 Q85,240 105,270" stroke="#222" stroke-width="4" fill="none"/>
+  <!-- Interhemispheric fissure (falx) -->
+  <line x1="200" y1="92" x2="200" y2="390" stroke="#1a1a1a" stroke-width="3"/>
+  <!-- Lateral ventricles (dark CSF) -->
+  <path d="M170,195 Q190,185 210,195 L215,230 Q200,240 185,230 Z" fill="#222" opacity="0.85"/>
+  <path d="M230,195 Q210,185 190,195 L185,230 Q200,240 215,230 Z" fill="#222" opacity="0.85" transform="scale(-1,1) translate(-400,0)"/>
+  <!-- Third ventricle -->
+  <rect x="195" y="235" width="10" height="28" rx="5" fill="#222" opacity="0.8"/>
+  <!-- Caudate/basal ganglia (slightly brighter) -->
+  <ellipse cx="165" cy="225" rx="18" ry="14" fill="#8a8a8a"/>
+  <ellipse cx="235" cy="225" rx="18" ry="14" fill="#8a8a8a"/>
+  <!-- Thalamus -->
+  <ellipse cx="185" cy="256" rx="16" ry="12" fill="#7e7e7e"/>
+  <ellipse cx="215" cy="256" rx="16" ry="12" fill="#7e7e7e"/>
+  <!-- Posterior fossa / cerebellum -->
+  <ellipse cx="200" cy="350" rx="70" ry="50" fill="#6a6a6a"/>
+  <!-- Tentorium -->
+  <path d="M115,310 Q200,295 285,310" stroke="#3a3a3a" stroke-width="4" fill="none"/>
+  <!-- W/L annotation -->
+  <text x="8" y="460" fill="#888" font-family="monospace" font-size="10">W:80  L:40</text>
+  <text x="180" y="460" fill="#888" font-family="monospace" font-size="10">BRAIN WINDOW</text>
+  <text x="8" y="472" fill="#555" font-family="monospace" font-size="9">IMPRESSION: NO ACUTE INTRACRANIAL ABNORMALITY</text>
+</svg>

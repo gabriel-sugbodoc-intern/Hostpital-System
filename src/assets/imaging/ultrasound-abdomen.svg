@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480">
+  <rect width="400" height="480" fill="#000"/>
+  <!-- Header -->
+  <text x="8" y="16" fill="#aaccff" font-family="monospace" font-size="10">ABDOMINAL US · LONGITUDINAL · 12 JUL 2026</text>
+  <text x="8" y="28" fill="#8899cc" font-family="monospace" font-size="9">CEBU IMAGING CENTER · PROBE: CONVEX 3.5MHz</text>
+  <!-- Sector scan area (convex probe) -->
+  <path d="M60,50 Q200,30 340,50 L370,430 Q200,460 30,430 Z" fill="#050518"/>
+  <!-- Near-field artifact band -->
+  <path d="M80,50 Q200,34 320,50 L315,90 Q200,76 85,90 Z" fill="#1a1a3a"/>
+  <!-- Liver parenchyma (medium echogenicity) -->
+  <path d="M95,105 Q150,90 250,95 Q310,105 325,160 Q330,230 315,290 Q290,320 235,315 Q180,305 140,290 Q100,270 90,215 Q82,165 95,105" fill="#2a1e12"/>
+  <!-- Liver texture (dots/speckle) -->
+  <circle cx="150" cy="160" r="2" fill="#6a4a2a" opacity="0.6"/>
+  <circle cx="180" cy="145" r="1.5" fill="#5a3e22" opacity="0.5"/>
+  <circle cx="210" cy="175" r="2" fill="#6a4a2a" opacity="0.55"/>
+  <circle cx="240" cy="155" r="1.5" fill="#5a3e22" opacity="0.5"/>
+  <circle cx="270" cy="185" r="2" fill="#6a4a2a" opacity="0.6"/>
+  <circle cx="160" cy="210" r="2" fill="#5a3e22" opacity="0.5"/>
+  <circle cx="200" cy="220" r="1.5" fill="#6a4a2a" opacity="0.55"/>
+  <circle cx="250" cy="230" r="2" fill="#5a3e22" opacity="0.5"/>
+  <circle cx="170" cy="270" r="1.5" fill="#6a4a2a" opacity="0.45"/>
+  <circle cx="220" cy="265" r="2" fill="#5a3e22" opacity="0.5"/>
+  <circle cx="300" cy="210" r="1.5" fill="#6a4a2a" opacity="0.45"/>
+  <!-- Hepatic vessels (portal vein - thick, anechoic) -->
+  <ellipse cx="188" cy="240" rx="28" ry="10" fill="#000a22" opacity="0.85"/>
+  <ellipse cx="230" cy="220" rx="18" ry="7" fill="#000a22" opacity="0.75"/>
+  <!-- Gallbladder (anechoic, well-defined) -->
+  <ellipse cx="265" cy="270" rx="26" ry="18" fill="#001122"/>
+  <ellipse cx="265" cy="270" rx="24" ry="16" fill="#000a18"/>
+  <text x="255" y="275" fill="#aaccff" font-family="monospace" font-size="8">GB</text>
+  <!-- Right kidney (right side of screen = patient left) -->
+  <ellipse cx="315" cy="330" rx="28" ry="42" fill="#1e140a"/>
+  <ellipse cx="315" cy="330" rx="20" ry="34" fill="#110d06"/>
+  <!-- Renal sinus (bright central echo) -->
+  <ellipse cx="315" cy="330" rx="10" ry="18" fill="#6a5a3a"/>
+  <text x="298" y="332" fill="#aaccff" font-family="monospace" font-size="8">RK</text>
+  <!-- Spleen hint (left side) -->
+  <path d="M88,320 Q80,295 95,270 Q108,255 125,265 Q140,278 135,305 Q128,330 110,338 Q94,340 88,320" fill="#1a100a"/>
+  <text x="96" y="318" fill="#aaccff" font-family="monospace" font-size="8">SP</text>
+  <!-- Depth markers -->
+  <text x="372" y="130" fill="#8899cc" font-family="monospace" font-size="9">2</text>
+  <text x="372" y="230" fill="#8899cc" font-family="monospace" font-size="9">5</text>
+  <text x="372" y="330" fill="#8899cc" font-family="monospace" font-size="9">8</text>
+  <text x="372" y="430" fill="#8899cc" font-family="monospace" font-size="9">12</text>
+  <!-- Footer -->
+  <text x="8" y="460" fill="#8899cc" font-family="monospace" font-size="10">LIVER: NORMAL · GB: UNREMARKABLE</text>
+  <text x="8" y="472" fill="#556699" font-family="monospace" font-size="9">IMPRESSION: NO SIGNIFICANT ABDOMINAL FINDING</text>
+</svg>

@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 340">
+  <rect width="500" height="340" fill="#0a0a0a"/>
+  <!-- Header -->
+  <text x="8" y="16" fill="#aaa" font-family="monospace" font-size="10">12-LEAD ECG · 28 JUN 2026 · 14:22</text>
+  <text x="8" y="28" fill="#777" font-family="monospace" font-size="9">HR: 78 bpm · PR: 160ms · QRS: 88ms · NORMAL SINUS RHYTHM</text>
+  <!-- Grid lines (large squares) -->
+  <line x1="0" y1="50" x2="500" y2="50" stroke="#1a1a1a" stroke-width="0.5"/>
+  <line x1="0" y1="130" x2="500" y2="130" stroke="#1a1a1a" stroke-width="0.5"/>
+  <line x1="0" y1="210" x2="500" y2="210" stroke="#1a1a1a" stroke-width="0.5"/>
+  <line x1="0" y1="290" x2="500" y2="290" stroke="#1a1a1a" stroke-width="0.5"/>
+  <line x1="100" y1="40" x2="100" y2="300" stroke="#1a1a1a" stroke-width="0.5"/>
+  <line x1="200" y1="40" x2="200" y2="300" stroke="#1a1a1a" stroke-width="0.5"/>
+  <line x1="300" y1="40" x2="300" y2="300" stroke="#1a1a1a" stroke-width="0.5"/>
+  <line x1="400" y1="40" x2="400" y2="300" stroke="#1a1a1a" stroke-width="0.5"/>
+  <!-- Small squares -->
+  <line x1="0" y1="66" x2="500" y2="66" stroke="#111" stroke-width="0.3"/>
+  <line x1="0" y1="82" x2="500" y2="82" stroke="#111" stroke-width="0.3"/>
+  <line x1="0" y1="98" x2="500" y2="98" stroke="#111" stroke-width="0.3"/>
+  <line x1="0" y1="114" x2="500" y2="114" stroke="#111" stroke-width="0.3"/>
+  <line x1="40" y1="40" x2="40" y2="300" stroke="#111" stroke-width="0.3"/>
+  <line x1="80" y1="40" x2="80" y2="300" stroke="#111" stroke-width="0.3"/>
+  <line x1="140" y1="40" x2="140" y2="300" stroke="#111" stroke-width="0.3"/>
+  <line x1="160" y1="40" x2="160" y2="300" stroke="#111" stroke-width="0.3"/>
+  <line x1="180" y1="40" x2="180" y2="300" stroke="#111" stroke-width="0.3"/>
+  <line x1="220" y1="40" x2="220" y2="300" stroke="#111" stroke-width="0.3"/>
+  <line x1="240" y1="40" x2="240" y2="300" stroke="#111" stroke-width="0.3"/>
+  <line x1="260" y1="40" x2="260" y2="300" stroke="#111" stroke-width="0.3"/>
+  <line x1="280" y1="40" x2="280" y2="300" stroke="#111" stroke-width="0.3"/>
+  <line x1="320" y1="40" x2="320" y2="300" stroke="#111" stroke-width="0.3"/>
+  <line x1="340" y1="40" x2="340" y2="300" stroke="#111" stroke-width="0.3"/>
+  <line x1="360" y1="40" x2="360" y2="300" stroke="#111" stroke-width="0.3"/>
+  <line x1="380" y1="40" x2="380" y2="300" stroke="#111" stroke-width="0.3"/>
+  <line x1="420" y1="40" x2="420" y2="300" stroke="#111" stroke-width="0.3"/>
+  <line x1="440" y1="40" x2="440" y2="300" stroke="#111" stroke-width="0.3"/>
+  <line x1="460" y1="40" x2="460" y2="300" stroke="#111" stroke-width="0.3"/>
+  <line x1="480" y1="40" x2="480" y2="300" stroke="#111" stroke-width="0.3"/>
+  <!-- Lead I label -->
+  <text x="8" y="88" fill="#cc8800" font-family="monospace" font-size="9">I</text>
+  <!-- Lead I waveform (Row 1, baseline ~90) -->
+  <!-- PQRST complex 1 -->
+  <polyline points="20,90 32,90 35,86 38,90 44,90 46,74 50,110 53,68 57,90 65,90 68,88 71,90 78,90" stroke="#ff8800" stroke-width="1.5" fill="none"/>
+  <!-- PQRST complex 2 -->
+  <polyline points="96,90 108,90 111,86 114,90 120,90 122,74 126,110 129,68 133,90 141,90 144,88 147,90 158,90" stroke="#ff8800" stroke-width="1.5" fill="none"/>
+  <!-- PQRST complex 3 -->
+  <polyline points="172,90 184,90 187,86 190,90 196,90 198,74 202,110 205,68 209,90 217,90 220,88 223,90 234,90" stroke="#ff8800" stroke-width="1.5" fill="none"/>
+  <!-- PQRST complex 4 -->
+  <polyline points="248,90 260,90 263,86 266,90 272,90 274,74 278,110 281,68 285,90 293,90 296,88 299,90 310,90" stroke="#ff8800" stroke-width="1.5" fill="none"/>
+  <!-- PQRST complex 5 -->
+  <polyline points="326,90 338,90 341,86 344,90 350,90 352,74 356,110 359,68 363,90 371,90 374,88 377,90 388,90" stroke="#ff8800" stroke-width="1.5" fill="none"/>
+  <!-- Lead II label -->
+  <text x="8" y="170" fill="#cc8800" font-family="monospace" font-size="9">II</text>
+  <!-- Lead II waveform (Row 2, baseline ~170) larger P wave, upright QRS -->
+  <polyline points="20,170 30,170 34,162 38,170 44,170 46,148 50,190 53,138 57,170 68,170 72,167 76,170 86,170" stroke="#ff8800" stroke-width="1.5" fill="none"/>
+  <polyline points="100,170 110,170 114,162 118,170 124,170 126,148 130,190 133,138 137,170 148,170 152,167 156,170 166,170" stroke="#ff8800" stroke-width="1.5" fill="none"/>
+  <polyline points="180,170 190,170 194,162 198,170 204,170 206,148 210,190 213,138 217,170 228,170 232,167 236,170 246,170" stroke="#ff8800" stroke-width="1.5" fill="none"/>
+  <polyline points="260,170 270,170 274,162 278,170 284,170 286,148 290,190 293,138 297,170 308,170 312,167 316,170 326,170" stroke="#ff8800" stroke-width="1.5" fill="none"/>
+  <polyline points="340,170 350,170 354,162 358,170 364,170 366,148 370,190 373,138 377,170 388,170 392,167 396,170 406,170" stroke="#ff8800" stroke-width="1.5" fill="none"/>
+  <!-- V1 label -->
+  <text x="8" y="248" fill="#cc8800" font-family="monospace" font-size="9">V1</text>
+  <!-- V1 waveform (Row 3, biphasic QRS pattern) -->
+  <polyline points="20,250 30,250 33,244 36,250 40,250 42,240 45,262 47,258 50,250 60,250 63,248 66,250 76,250" stroke="#ff8800" stroke-width="1.5" fill="none"/>
+  <polyline points="95,250 105,250 108,244 111,250 115,250 117,240 120,262 122,258 125,250 135,250 138,248 141,250 151,250" stroke="#ff8800" stroke-width="1.5" fill="none"/>
+  <polyline points="170,250 180,250 183,244 186,250 190,250 192,240 195,262 197,258 200,250 210,250 213,248 216,250 226,250" stroke="#ff8800" stroke-width="1.5" fill="none"/>
+  <polyline points="245,250 255,250 258,244 261,250 265,250 267,240 270,262 272,258 275,250 285,250 288,248 291,250 301,250" stroke="#ff8800" stroke-width="1.5" fill="none"/>
+  <polyline points="320,250 330,250 333,244 336,250 340,250 342,240 345,262 347,258 350,250 360,250 363,248 366,250 376,250" stroke="#ff8800" stroke-width="1.5" fill="none"/>
+  <!-- Lead labels row 2 -->
+  <text x="108" y="170" fill="#cc8800" font-family="monospace" font-size="9">III</text>
+  <text x="208" y="170" fill="#cc8800" font-family="monospace" font-size="9">aVR</text>
+  <text x="308" y="170" fill="#cc8800" font-family="monospace" font-size="9">aVF</text>
+  <!-- Footer -->
+  <text x="8" y="318" fill="#888" font-family="monospace" font-size="9">25 mm/s · 10 mm/mV</text>
+  <text x="8" y="330" fill="#555" font-family="monospace" font-size="9">INTERPRETATION: NORMAL SINUS RHYTHM · NO ST CHANGES · 78 BPM</text>
+</svg>
