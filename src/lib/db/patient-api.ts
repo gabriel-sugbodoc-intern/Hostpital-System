@@ -1,5 +1,11 @@
 import { sqlDb } from "@/lib/db/sql-db";
-import { ensureEncounterForAppointment, syncPatientEncountersAndAppointments } from "./encounter-sync";
+import {
+  ensureEncounterForAppointment,
+  syncPatientEncountersAndAppointments,
+} from "./encounter-sync";
+import { sendEmailSafe } from "@/lib/brevo-api";
+import { sendInfobipSmsSafe } from "@/lib/infobip-api";
+import { appointmentBookedTemplate, appointmentBookedSmsText } from "@/lib/email-templates";
 
 type Ok<T> = { data: T; error?: undefined };
 type Fail = { data?: undefined; error: string };
@@ -71,23 +77,30 @@ function mapAppointment(row: any) {
   };
 }
 
-function mapBill(row: any, extra?: {
-  matchingOrder?: any;
-  matchingPayment?: any;
-  branchName?: string;
-}) {
+function mapBill(
+  row: any,
+  extra?: {
+    matchingOrder?: any;
+    matchingPayment?: any;
+    branchName?: string;
+  },
+) {
   const matchingOrder = extra?.matchingOrder;
   const matchingPayment = extra?.matchingPayment;
   const branchName = extra?.branchName;
 
   const items: Array<{ desc: string; qty: number; unitPrice: number; total: number }> = [];
-  if (matchingOrder?.order_items && Array.isArray(matchingOrder.order_items) && matchingOrder.order_items.length > 0) {
+  if (
+    matchingOrder?.order_items &&
+    Array.isArray(matchingOrder.order_items) &&
+    matchingOrder.order_items.length > 0
+  ) {
     for (const item of matchingOrder.order_items) {
       items.push({
         desc: `${item.product_name}${item.brand ? ` (${item.brand})` : ""}`,
         qty: Number(item.quantity ?? 1),
         unitPrice: Number(item.unit_price ?? 0),
-        total: Number(item.line_total ?? (Number(item.quantity ?? 1) * Number(item.unit_price ?? 0))),
+        total: Number(item.line_total ?? Number(item.quantity ?? 1) * Number(item.unit_price ?? 0)),
       });
     }
   } else {
@@ -100,7 +113,7 @@ function mapBill(row: any, extra?: {
   }
 
   const deliveryFee = Number(matchingOrder?.delivery_fee ?? 0);
-  const subtotal = Number(matchingOrder?.subtotal ?? (Number(row.amount ?? 0) - deliveryFee));
+  const subtotal = Number(matchingOrder?.subtotal ?? Number(row.amount ?? 0) - deliveryFee);
 
   return {
     id: row.id,
@@ -112,7 +125,10 @@ function mapBill(row: any, extra?: {
     dueDate: row.due_date,
     paidAt: row.paid_at || matchingPayment?.created_at,
     createdAt: row.created_at,
-    paymentMethod: row.payment_method || matchingPayment?.method || (row.status === "Paid" ? "Stripe" : undefined),
+    paymentMethod:
+      row.payment_method ||
+      matchingPayment?.method ||
+      (row.status === "Paid" ? "Stripe" : undefined),
     orderNo: matchingOrder?.order_no,
     orderId: matchingOrder?.id,
     stripePaymentIntentId: matchingPayment?.transaction_id,
@@ -148,7 +164,11 @@ function mapMessage(row: any) {
 async function buildEncounterRecords(patientId: string, encounterId?: string) {
   await syncPatientEncountersAndAppointments(patientId);
 
-  let encQuery = sqlDb.from("encounters").select("*").eq("patient_id", patientId).order("encounter_date", { ascending: false });
+  let encQuery = sqlDb
+    .from("encounters")
+    .select("*")
+    .eq("patient_id", patientId)
+    .order("encounter_date", { ascending: false });
   if (encounterId) encQuery = encQuery.eq("id", encounterId);
   const { data: encounters, error: encError } = await encQuery;
   if (encError) throw new Error(encError.message);
@@ -245,7 +265,8 @@ async function buildEncounterRecords(patientId: string, encounterId?: string) {
       encounterRef: p.encounter_id,
       data: {
         med: p.drug,
-        instruction: p.instructions ?? [p.dosage, p.frequency, p.duration].filter(Boolean).join(" · "),
+        instruction:
+          p.instructions ?? [p.dosage, p.frequency, p.duration].filter(Boolean).join(" · "),
         status: p.status,
       },
     });
@@ -321,7 +342,10 @@ export const patientApi = {
         const fallback = {
           id: authData.user.id,
           email: authData.user.email ?? "",
-          name: (authData.user.user_metadata?.name as string) ?? authData.user.email?.split("@")[0] ?? "Patient",
+          name:
+            (authData.user.user_metadata?.name as string) ??
+            authData.user.email?.split("@")[0] ??
+            "Patient",
           dob: "",
           bloodType: "",
           phone: (authData.user.user_metadata?.phone as string) ?? "",
@@ -380,18 +404,64 @@ export const patientApi = {
     const uid = await getCurrentUserId();
     if (!uid) return fail("You must be signed in.");
     const update: Record<string, any> = {};
+    const { safeParseDate } = await import("@/lib/date-utils");
+    const { normalizeToE164 } = await import("@/lib/phone");
+
+    // dob — accept only empty (→ null) or a parseable date (→ YYYY-MM-DD);
+    // anything else is rejected with a traceable log instead of poisoning the
+    // profiles.dob column (which previously caused "Invalid time value" on render).
+    if ("dob" in profile) {
+      const rawDob = typeof profile.dob === "string" ? profile.dob.trim() : profile.dob;
+      if (!rawDob) {
+        update.dob = null;
+      } else {
+        const parsed = safeParseDate(rawDob);
+        if (parsed) {
+          update.dob = parsed.toISOString().slice(0, 10);
+        } else {
+          console.warn("[Profile] invalid dob rejected:", profile.dob);
+          return fail(
+            `"${String(profile.dob)}" is not a valid date of birth. Use the date picker (YYYY-MM-DD).`,
+          );
+        }
+      }
+    }
+
+    // phone — store canonical E.164 (+639…) so every SMS consumer (Infobip)
+    // receives a consistent, directly usable value.
+    if ("phone" in profile) {
+      const rawPhone = typeof profile.phone === "string" ? profile.phone.trim() : "";
+      if (!rawPhone) {
+        update.phone = null;
+      } else {
+        const e164 = normalizeToE164(rawPhone);
+        if (e164) {
+          update.phone = e164;
+        } else {
+          console.warn("[Profile] invalid phone rejected:", profile.phone);
+          update.phone = rawPhone;
+        }
+      }
+    }
+
     if ("name" in profile) update.name = profile.name;
-    if ("phone" in profile) update.phone = profile.phone;
-    if ("dob" in profile) update.dob = profile.dob;
     if ("bloodType" in profile) update.blood_type = profile.bloodType;
     if ("address" in profile) update.address = profile.address;
     if ("sex" in profile) update.sex = profile.sex;
     if ("allergies" in profile) update.allergies = profile.allergies;
-    if ("emergencyContactName" in profile) update.emergency_contact_name = profile.emergencyContactName;
-    if ("emergencyContactRelation" in profile) update.emergency_contact_relation = profile.emergencyContactRelation;
-    if ("emergencyContactPhone" in profile) update.emergency_contact_phone = profile.emergencyContactPhone;
+    if ("emergencyContactName" in profile)
+      update.emergency_contact_name = profile.emergencyContactName;
+    if ("emergencyContactRelation" in profile)
+      update.emergency_contact_relation = profile.emergencyContactRelation;
+    if ("emergencyContactPhone" in profile)
+      update.emergency_contact_phone = profile.emergencyContactPhone;
 
-    const { data, error } = await sqlDb.from("profiles").update(update as never).eq("id", uid).select("*").maybeSingle();
+    const { data, error } = await sqlDb
+      .from("profiles")
+      .update(update as never)
+      .eq("id", uid)
+      .select("*")
+      .maybeSingle();
     if (error) return fail(error.message);
     if (!data) return fail("Profile not found.");
     return ok({ user: mapProfile(data) });
@@ -435,7 +505,66 @@ export const patientApi = {
       .single();
     if (error) return fail(error.message);
     await ensureEncounterForAppointment(data);
-    return ok({ appointment: mapAppointment(data), email: { sent: true } as { sent: boolean; reason?: string } });
+
+    // Fire-and-forget confirmation email — never blocks or fails the booking.
+    let email: { sent: boolean; reason?: string } = { sent: false, reason: "Skipped" };
+    let sms: { sent: boolean; reason?: string } = { sent: false, reason: "Skipped" };
+    try {
+      const { data: profile } = await sqlDb
+        .from("profiles")
+        .select("email, name, phone")
+        .eq("id", uid)
+        .maybeSingle();
+      if (profile?.email) {
+        const content = appointmentBookedTemplate({
+          patientName: profile.name,
+          doctorName: appointment.doctorName,
+          department: appointment.specialty,
+          clinic: appointment.clinic,
+          appointmentDate: appointment.appointmentDate,
+          appointmentTime: appointment.appointmentTime,
+        });
+        email = await sendEmailSafe({
+          to: profile.email,
+          toName: profile.name || undefined,
+          subject: content.subject,
+          html: content.html,
+          text: content.text,
+        });
+      } else {
+        email = { sent: false, reason: "Patient profile has no email address." };
+      }
+
+      // Fire-and-forget confirmation SMS via Infobip — same non-blocking rules.
+      const { normalizeToE164 } = await import("@/lib/phone");
+      const toPhone = normalizeToE164(profile?.phone);
+      if (toPhone) {
+        const smsResult = await sendInfobipSmsSafe({
+          to: toPhone,
+          body: appointmentBookedSmsText({
+            patientName: profile?.name,
+            doctorName: appointment.doctorName,
+            department: appointment.specialty,
+            clinic: appointment.clinic,
+            appointmentDate: appointment.appointmentDate,
+            appointmentTime: appointment.appointmentTime,
+          }),
+        });
+        sms = {
+          sent: smsResult.success,
+          ...(smsResult.success ? {} : { reason: smsResult.error }),
+        };
+      } else {
+        sms = { sent: false, reason: "Patient profile has no phone number." };
+      }
+    } catch (err: any) {
+      console.error("[Booking notification] failed:", err?.message);
+      if (email.sent === false && email.reason === "Skipped")
+        email = { sent: false, reason: err?.message };
+      sms = { sent: false, reason: err?.message };
+    }
+
+    return ok({ appointment: mapAppointment(data), email, sms });
   },
 
   cancelAppointment: async (id: string) => {
@@ -462,15 +591,45 @@ export const patientApi = {
     const uid = await getCurrentUserId();
     if (!uid) return fail("You must be signed in.");
     try {
-      const [profileRes, apptRes, billsRes, messagesRes, recordsRes, queueRes, ordersRes, paymentsRes, branchesRes] = await Promise.all([
+      const [
+        profileRes,
+        apptRes,
+        billsRes,
+        messagesRes,
+        recordsRes,
+        queueRes,
+        ordersRes,
+        paymentsRes,
+        branchesRes,
+      ] = await Promise.all([
         sqlDb.from("profiles").select("*").eq("id", uid).maybeSingle(),
-        sqlDb.from("appointments").select("*").eq("patient_id", uid).order("appointment_date", { ascending: false }),
-        sqlDb.from("bills").select("*").eq("patient_id", uid).order("created_at", { ascending: false }),
-        sqlDb.from("messages").select("*").eq("patient_id", uid).order("created_at", { ascending: true }),
+        sqlDb
+          .from("appointments")
+          .select("*")
+          .eq("patient_id", uid)
+          .order("appointment_date", { ascending: false }),
+        sqlDb
+          .from("bills")
+          .select("*")
+          .eq("patient_id", uid)
+          .order("created_at", { ascending: false }),
+        sqlDb
+          .from("messages")
+          .select("*")
+          .eq("patient_id", uid)
+          .order("created_at", { ascending: true }),
         buildEncounterRecords(uid),
         patientApi.getQueue(),
-        sqlDb.from("orders").select("*, order_items(*)").eq("user_id", uid).order("created_at", { ascending: false }),
-        sqlDb.from("payments").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
+        sqlDb
+          .from("orders")
+          .select("*, order_items(*)")
+          .eq("user_id", uid)
+          .order("created_at", { ascending: false }),
+        sqlDb
+          .from("payments")
+          .select("*")
+          .eq("user_id", uid)
+          .order("created_at", { ascending: false }),
         sqlDb.from("store_branches").select("id, name, location"),
       ]);
       if (profileRes.error) return fail(profileRes.error.message);
@@ -485,7 +644,7 @@ export const patientApi = {
 
       const orders = ordersRes.data ?? [];
       const payments = paymentsRes.data ?? [];
-      let bills = billsRes.data ?? [];
+      const bills = billsRes.data ?? [];
 
       // Reconcile unbilled orders (if any store order exists without a bill, create it)
       const existingBillInvoices = new Set(bills.map((b) => b.invoice_no));
@@ -507,9 +666,11 @@ export const patientApi = {
               category: "Medical Store",
               description: `Medical Store Order #${order.order_no}`,
               amount: Number(order.total ?? 0),
-              status: isPaid ? "Paid" : (order.payment_status || "Pending"),
+              status: isPaid ? "Paid" : order.payment_status || "Pending",
               due_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-              paid_at: isPaid ? (order.received_at || order.created_at || new Date().toISOString()) : null,
+              paid_at: isPaid
+                ? order.received_at || order.created_at || new Date().toISOString()
+                : null,
               payment_method: isPaid ? "Stripe" : null,
             })
             .select()
@@ -522,7 +683,9 @@ export const patientApi = {
 
             if (isPaid) {
               // Ensure payment record exists
-              const hasPayment = payments.some((p) => (p.description || "").includes(order.order_no) || p.bill_id === newBill.id);
+              const hasPayment = payments.some(
+                (p) => (p.description || "").includes(order.order_no) || p.bill_id === newBill.id,
+              );
               if (!hasPayment) {
                 const { data: newPayment } = await sqlDb
                   .from("payments")
@@ -557,13 +720,19 @@ export const patientApi = {
         // Find matching payment
         const matchingPayment = payments.find((p) => {
           if (p.bill_id && p.bill_id === bill.id) return true;
-          if (matchingOrder?.order_no && p.description && p.description.includes(matchingOrder.order_no)) return true;
-          if (bill.invoice_no && p.description && p.description.includes(bill.invoice_no)) return true;
+          if (
+            matchingOrder?.order_no &&
+            p.description &&
+            p.description.includes(matchingOrder.order_no)
+          )
+            return true;
+          if (bill.invoice_no && p.description && p.description.includes(bill.invoice_no))
+            return true;
           return false;
         });
 
         const branchName = matchingOrder?.pickup_branch
-          ? (branchesMap.get(matchingOrder.pickup_branch) || matchingOrder.pickup_branch)
+          ? branchesMap.get(matchingOrder.pickup_branch) || matchingOrder.pickup_branch
           : undefined;
 
         return mapBill(bill, { matchingOrder, matchingPayment, branchName });
@@ -656,9 +825,14 @@ export const patientApi = {
       .lt("checked_in_at", entry.checked_in_at);
     ahead = count ?? null;
 
-    let appointment: { date: string; time: string; doctorName?: string; clinic?: string } | null = null;
+    let appointment: { date: string; time: string; doctorName?: string; clinic?: string } | null =
+      null;
     if (entry.appointment_id) {
-      const { data: appt } = await sqlDb.from("appointments").select("*").eq("id", entry.appointment_id).maybeSingle();
+      const { data: appt } = await sqlDb
+        .from("appointments")
+        .select("*")
+        .eq("id", entry.appointment_id)
+        .maybeSingle();
       if (appt) {
         appointment = {
           date: fmtDate(appt.appointment_date),
@@ -683,7 +857,13 @@ export const patientApi = {
     });
   },
 
-  sendPatientMessage: async (message: { doctorId: string; doctorName: string; specialty: string; text?: string; fileName?: string }) => {
+  sendPatientMessage: async (message: {
+    doctorId: string;
+    doctorName: string;
+    specialty: string;
+    text?: string;
+    fileName?: string;
+  }) => {
     const uid = await getCurrentUserId();
     if (!uid) return fail("You must be signed in.");
     const { data, error } = await sqlDb

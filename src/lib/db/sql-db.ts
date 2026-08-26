@@ -189,7 +189,19 @@ class SqlDatabase {
       }
 
       const name = options?.data?.name || email.split("@")[0] || "Patient";
-      const phone = options?.data?.phone || null;
+      // Defensive re-normalization: callers may pass raw local formats
+      // ("0917 123 4567"); store canonical E.164 for Infobip SMS consumers.
+      let phone = options?.data?.phone || null;
+      if (typeof phone === "string" && phone.trim()) {
+        try {
+          const { normalizeToE164 } = await import("../phone");
+          phone = normalizeToE164(phone) ?? phone.trim();
+        } catch {
+          phone = phone.trim();
+        }
+      } else {
+        phone = null;
+      }
       const userId = `user-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 
       const newProfile: any = {

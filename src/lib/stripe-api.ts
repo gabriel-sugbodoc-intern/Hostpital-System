@@ -11,9 +11,7 @@ let stripeClient: Stripe | null = null;
 
 function getStripe(): Stripe {
   if (!SECRET_KEY) {
-    throw new Error(
-      "Stripe is not configured: missing STRIPE_SECRET_KEY environment variable."
-    );
+    throw new Error("Stripe is not configured: missing STRIPE_SECRET_KEY environment variable.");
   }
   if (!stripeClient) {
     stripeClient = new Stripe(SECRET_KEY);
@@ -28,6 +26,67 @@ export const getStripeConfigServerFn = createServerFn({ method: "GET" }).handler
     publishableKey: PUBLISHABLE_KEY,
   };
 });
+
+/**
+ * Creates a Stripe PaymentIntent for paying a bill, for use with embedded
+ * Stripe Elements on the Billing page. Returns ONLY the client secret +
+ * intent id; the secret key never leaves the server.
+ */
+export const createBillPaymentIntentServerFn = createServerFn({ method: "POST" })
+  .validator(
+    (input: { amount: number; description?: string; billId?: string; invoiceNo?: string }) => input,
+  )
+  .handler(async (ctx) => {
+    const { amount, description, billId, invoiceNo } = ctx.data;
+
+    const { data: authData } = await sqlDb.auth.getUser();
+    const userId = authData?.user?.id;
+    if (!userId) {
+      return { success: false as const, error: "You must be signed in to pay." };
+    }
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return { success: false as const, error: "Invalid payment amount." };
+    }
+    const centavos = Math.round(amount * 100);
+    // Stripe minimum charge is ₱1.00 in PHP; cap guards against fat-finger input.
+    if (centavos < 100 || centavos > 50_000_000_00) {
+      return { success: false as const, error: "Amount must be between ₱1.00 and ₱500,000." };
+    }
+
+    try {
+      const stripe = getStripe();
+      const intent = await stripe.paymentIntents.create({
+        amount: centavos,
+        currency: "php",
+        automatic_payment_methods: { enabled: true },
+        description: (description || "SugboDoc Healthcare Bill").slice(0, 300),
+        metadata: {
+          kind: "bill",
+          patient_id: userId,
+          bill_id: billId || "",
+          invoice_no: invoiceNo || "",
+        },
+      });
+
+      if (!intent.client_secret) {
+        return { success: false as const, error: "Stripe did not return a client secret." };
+      }
+
+      console.log("[Stripe] PaymentIntent created:", intent.id);
+      return {
+        success: true as const,
+        clientSecret: intent.client_secret,
+        paymentIntentId: intent.id,
+        amountTotal: (intent.amount ?? centavos) / 100,
+      };
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to initialize the Stripe payment.";
+      console.error("[Stripe] PaymentIntent creation failed:", message);
+      return { success: false as const, error: message };
+    }
+  });
 
 export const createStripeCheckoutSessionServerFn = createServerFn({ method: "POST" })
   .validator(
@@ -55,7 +114,7 @@ export const createStripeCheckoutSessionServerFn = createServerFn({ method: "POS
       subtotal?: number;
       successUrl: string;
       cancelUrl: string;
-    }) => input
+    }) => input,
   )
   .handler(async (ctx) => {
     const {
@@ -146,10 +205,10 @@ export const createStripeCheckoutSessionServerFn = createServerFn({ method: "POS
     return {
       sessionId: session.id,
       url: session.url,
-      paymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : session.id,
+      paymentIntentId:
+        typeof session.payment_intent === "string" ? session.payment_intent : session.id,
     };
-  }
-);
+  });
 async function fulfillPayment({
   paymentIntentId,
   amountTotal,
@@ -233,10 +292,7 @@ async function fulfillPayment({
           .maybeSingle();
         if (prod) {
           const updatedStock = Math.max(0, (prod.stock ?? 0) - item.quantity);
-          await sqlDb
-            .from("products")
-            .update({ stock: updatedStock })
-            .eq("id", prod.id);
+          await sqlDb.from("products").update({ stock: updatedStock }).eq("id", prod.id);
         }
       }
     }
@@ -250,12 +306,20 @@ async function fulfillPayment({
     targetBill = data;
   }
   if (!targetBill && invoiceNo) {
-    const { data } = await sqlDb.from("bills").select("*").eq("invoice_no", invoiceNo).maybeSingle();
+    const { data } = await sqlDb
+      .from("bills")
+      .select("*")
+      .eq("invoice_no", invoiceNo)
+      .maybeSingle();
     targetBill = data;
   }
   if (!targetBill && orderNo) {
     const expectedInv = `INV-${orderNo.replace("ORD-", "")}`;
-    const { data } = await sqlDb.from("bills").select("*").eq("invoice_no", expectedInv).maybeSingle();
+    const { data } = await sqlDb
+      .from("bills")
+      .select("*")
+      .eq("invoice_no", expectedInv)
+      .maybeSingle();
     targetBill = data;
   }
 
@@ -294,7 +358,9 @@ async function fulfillPayment({
   } else if (finalPatientId) {
     const billInvoiceNo =
       invoiceNo ||
-      (orderNo ? `INV-${orderNo.replace("ORD-", "")}` : `INV-${Date.now().toString(36).toUpperCase()}`);
+      (orderNo
+        ? `INV-${orderNo.replace("ORD-", "")}`
+        : `INV-${Date.now().toString(36).toUpperCase()}`);
     const { data: createdBill } = await sqlDb
       .from("bills")
       .insert({
@@ -302,8 +368,7 @@ async function fulfillPayment({
         invoice_no: billInvoiceNo,
         category: policyId ? "Insurance" : orderId || orderNo ? "Medical Store" : "Healthcare",
         description:
-          description ||
-          (orderNo ? `Medical Store Order #${orderNo}` : "Healthcare Payment"),
+          description || (orderNo ? `Medical Store Order #${orderNo}` : "Healthcare Payment"),
         amount: amountTotal || targetOrder?.total || 0,
         status: "Paid",
         paid_at: new Date().toISOString(),
@@ -350,7 +415,8 @@ async function fulfillPayment({
     }
   } else if (
     targetBill &&
-    (targetBill.category === "Insurance" || targetBill.description?.toLowerCase().includes("insurance"))
+    (targetBill.category === "Insurance" ||
+      targetBill.description?.toLowerCase().includes("insurance"))
   ) {
     const targetUserId = finalPatientId || targetBill.patient_id;
     if (targetUserId) {
@@ -361,7 +427,9 @@ async function fulfillPayment({
           payment_status: "Paid",
         })
         .eq("user_id", targetUserId)
-        .or("status.eq.Pending Payment,status.eq.pending_payment,status.eq.Pending,status.eq.pending");
+        .or(
+          "status.eq.Pending Payment,status.eq.pending_payment,status.eq.Pending,status.eq.pending",
+        );
     }
   }
 
@@ -373,7 +441,9 @@ async function fulfillPayment({
       amount: amountTotal || targetOrder?.total || targetBill?.amount || 0,
       description:
         description ||
-        (orderNo ? `Medical Store Order #${orderNo}` : targetBill?.description || `${paymentMethod} Payment`),
+        (orderNo
+          ? `Medical Store Order #${orderNo}`
+          : targetBill?.description || `${paymentMethod} Payment`),
       method: paymentMethod,
       status: "Paid",
       transaction_id: paymentIntentId,
@@ -414,7 +484,7 @@ export const processDirectStripePaymentServerFn = createServerFn({ method: "POST
       invoiceNo?: string;
       patientId?: string;
       description?: string;
-    }) => input
+    }) => input,
   )
   .handler(async (ctx) => {
     const { amount, orderId, orderNo, billId, invoiceNo, patientId, description } = ctx.data;
@@ -432,7 +502,9 @@ export const processDirectStripePaymentServerFn = createServerFn({ method: "POST
         confirm: true,
         return_url: "https://sugbodoc.ph/billing",
         payment_method_types: ["card"],
-        description: description || (orderNo ? `Medical Store Order #${orderNo}` : "SugboDoc Medical Store Payment"),
+        description:
+          description ||
+          (orderNo ? `Medical Store Order #${orderNo}` : "SugboDoc Medical Store Payment"),
         metadata: {
           order_id: orderId || "",
           order_no: orderNo || "",
@@ -480,8 +552,7 @@ export const processDirectStripePaymentServerFn = createServerFn({ method: "POST
       console.warn("[Stripe] Direct payment failed:", message);
       return { success: false as const, error: message };
     }
-  }
-);
+  });
 
 /**
  * Read-only verification of a Stripe Checkout session.
@@ -531,8 +602,7 @@ export const verifyStripeSessionServerFn = createServerFn({ method: "POST" })
         error: e instanceof Error ? e.message : "Error verifying Stripe session",
       };
     }
-  }
-);
+  });
 
 export async function handleStripeWebhookRequest(request: Request): Promise<Response> {
   try {
@@ -660,7 +730,7 @@ export async function handleStripeWebhookRequest(request: Request): Promise<Resp
     console.error("[Stripe Webhook Error]:", err);
     return new Response(
       JSON.stringify({ error: err instanceof Error ? err.message : "Webhook handler failed" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }
 }

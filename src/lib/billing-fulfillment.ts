@@ -1,4 +1,6 @@
 import { sqlDb } from "@/lib/db/sql-db";
+import { sendEmailSafe } from "@/lib/brevo-api";
+import { paymentReceiptTemplate } from "@/lib/email-templates";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Client-side payment fulfillment.
@@ -256,6 +258,42 @@ export async function applyPaymentFulfillment(
         })} for Medical Store order #${confirmedOrderNo} was confirmed. Your order is now being prepared.`,
         kind: "order",
       });
+    }
+  }
+
+  // 7. Fire-and-forget payment receipt email — never blocks or fails fulfillment.
+  const receiptUserId = payingUserId;
+  if (receiptUserId) {
+    try {
+      const { data: profile } = await sqlDb
+        .from("profiles")
+        .select("email, name")
+        .eq("id", receiptUserId)
+        .maybeSingle();
+      if (profile?.email) {
+        const receiptAmount =
+          amountTotal || targetOrder?.total || targetBill?.amount || 0;
+        const content = paymentReceiptTemplate({
+          patientName: profile.name,
+          kind: policyId ? "insurance" : orderNo || targetOrder?.order_no ? "order" : "bill",
+          title:
+            description ||
+            (orderNo || targetOrder?.order_no
+              ? `Medical Store Order #${orderNo || targetOrder.order_no}`
+              : targetBill?.description || `${paymentMethod} Payment`),
+          amount: receiptAmount,
+          reference: paymentIntentId || undefined,
+        });
+        await sendEmailSafe({
+          to: profile.email,
+          toName: profile.name || undefined,
+          subject: content.subject,
+          html: content.html,
+          text: content.text,
+        });
+      }
+    } catch (err: any) {
+      console.error("[Email] payment receipt notification failed:", err?.message);
     }
   }
 

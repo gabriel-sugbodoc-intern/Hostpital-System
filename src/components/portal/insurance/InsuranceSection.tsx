@@ -1,11 +1,41 @@
 import React, { useState, useMemo } from "react";
 import {
-  Shield, Star, Users, Phone, Mail, Globe, Check, X, ChevronDown,
-  AlertCircle, Download, Clock, CreditCard, FileText, ArrowRight,
-  TrendingUp, Heart, Activity, Stethoscope, Building2, Calendar,
-  Search, Filter, Sparkles, CheckCircle2, XCircle, MinusCircle,
-  Tag, Percent, Award, BadgePercent, CheckCircle, RefreshCw, Zap
+  Shield,
+  Star,
+  Users,
+  Phone,
+  Mail,
+  Globe,
+  Check,
+  X,
+  ChevronDown,
+  AlertCircle,
+  Download,
+  Clock,
+  CreditCard,
+  FileText,
+  ArrowRight,
+  TrendingUp,
+  Heart,
+  Activity,
+  Stethoscope,
+  Building2,
+  Calendar,
+  Search,
+  Filter,
+  Sparkles,
+  CheckCircle2,
+  XCircle,
+  MinusCircle,
+  Tag,
+  Percent,
+  Award,
+  BadgePercent,
+  CheckCircle,
+  RefreshCw,
+  Zap,
 } from "lucide-react";
+import { safeFormatDate } from "@/lib/date-utils";
 
 export type InsurancePlan = {
   id: string;
@@ -75,28 +105,96 @@ type InsuranceSectionProps = {
 const money = (value: number | string) =>
   `₱${Number(value).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-const policyStatusStyles: Record<InsurancePolicy["status"], { bg: string; text: string; border: string; label: string }> = {
-  active: { bg: "bg-emerald-500/10", text: "text-emerald-700", border: "border-emerald-500/20", label: "Active Policy" },
-  expired: { bg: "bg-red-500/10", text: "text-red-700", border: "border-red-500/20", label: "Expired" },
-  pending: { bg: "bg-amber-500/10", text: "text-amber-700", border: "border-amber-500/20", label: "Pending Activation" },
-  cancelled: { bg: "bg-gray-500/10", text: "text-gray-700", border: "border-gray-500/20", label: "Cancelled" },
-  rejected: { bg: "bg-rose-500/10", text: "text-rose-700", border: "border-rose-500/20", label: "Declined" },
+const policyStatusStyles: Record<
+  InsurancePolicy["status"],
+  { bg: string; text: string; border: string; label: string }
+> = {
+  active: {
+    bg: "bg-emerald-500/10",
+    text: "text-emerald-700",
+    border: "border-emerald-500/20",
+    label: "Active Policy",
+  },
+  expired: {
+    bg: "bg-red-500/10",
+    text: "text-red-700",
+    border: "border-red-500/20",
+    label: "Expired",
+  },
+  pending: {
+    bg: "bg-amber-500/10",
+    text: "text-amber-700",
+    border: "border-amber-500/20",
+    label: "Pending Activation",
+  },
+  cancelled: {
+    bg: "bg-gray-500/10",
+    text: "text-gray-700",
+    border: "border-gray-500/20",
+    label: "Cancelled",
+  },
+  rejected: {
+    bg: "bg-rose-500/10",
+    text: "text-rose-700",
+    border: "border-rose-500/20",
+    label: "Declined",
+  },
 };
 
-const paymentStatusStyles: Record<InsurancePolicy["paymentStatus"], { bg: string; text: string; border: string; label: string }> = {
-  paid: { bg: "bg-emerald-500/10", text: "text-emerald-700", border: "border-emerald-500/20", label: "Payment: Paid (Stripe)" },
-  pending: { bg: "bg-amber-500/10", text: "text-amber-700", border: "border-amber-500/20", label: "Payment: Pending" },
-  overdue: { bg: "bg-orange-500/10", text: "text-orange-700", border: "border-orange-500/20", label: "Payment: Overdue" },
-  failed: { bg: "bg-rose-500/10", text: "text-rose-700", border: "border-rose-500/20", label: "Payment: Failed" },
-  cancelled: { bg: "bg-gray-500/10", text: "text-gray-700", border: "border-gray-500/20", label: "Payment: Cancelled" },
-  refunded: { bg: "bg-sky-500/10", text: "text-sky-700", border: "border-sky-500/20", label: "Payment: Refunded" },
+const paymentStatusStyles: Record<
+  InsurancePolicy["paymentStatus"],
+  { bg: string; text: string; border: string; label: string }
+> = {
+  paid: {
+    bg: "bg-emerald-500/10",
+    text: "text-emerald-700",
+    border: "border-emerald-500/20",
+    label: "Payment: Paid (Stripe)",
+  },
+  pending: {
+    bg: "bg-amber-500/10",
+    text: "text-amber-700",
+    border: "border-amber-500/20",
+    label: "Payment: Pending",
+  },
+  overdue: {
+    bg: "bg-orange-500/10",
+    text: "text-orange-700",
+    border: "border-orange-500/20",
+    label: "Payment: Overdue",
+  },
+  failed: {
+    bg: "bg-rose-500/10",
+    text: "text-rose-700",
+    border: "border-rose-500/20",
+    label: "Payment: Failed",
+  },
+  cancelled: {
+    bg: "bg-gray-500/10",
+    text: "text-gray-700",
+    border: "border-gray-500/20",
+    label: "Payment: Cancelled",
+  },
+  refunded: {
+    bg: "bg-sky-500/10",
+    text: "text-sky-700",
+    border: "border-sky-500/20",
+    label: "Payment: Refunded",
+  },
 };
 
 function PolicyStatusBadge({ status }: { status: InsurancePolicy["status"] }) {
-  const conf = policyStatusStyles[status] ?? { bg: "bg-muted", text: "text-muted-foreground", border: "border-border", label: status };
+  const conf = policyStatusStyles[status] ?? {
+    bg: "bg-muted",
+    text: "text-muted-foreground",
+    border: "border-border",
+    label: status,
+  };
   const Icon = status === "active" ? CheckCircle2 : status === "pending" ? Clock : XCircle;
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${conf.bg} ${conf.text} ${conf.border}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${conf.bg} ${conf.text} ${conf.border}`}
+    >
       <Icon className="h-3.5 w-3.5" />
       {conf.label}
     </span>
@@ -104,10 +202,24 @@ function PolicyStatusBadge({ status }: { status: InsurancePolicy["status"] }) {
 }
 
 function PaymentStatusBadge({ status }: { status: InsurancePolicy["paymentStatus"] }) {
-  const conf = paymentStatusStyles[status] ?? { bg: "bg-muted", text: "text-muted-foreground", border: "border-border", label: `Payment: ${status}` };
-  const Icon = status === "paid" ? CheckCircle : status === "pending" ? Clock : status === "refunded" ? RefreshCw : XCircle;
+  const conf = paymentStatusStyles[status] ?? {
+    bg: "bg-muted",
+    text: "text-muted-foreground",
+    border: "border-border",
+    label: `Payment: ${status}`,
+  };
+  const Icon =
+    status === "paid"
+      ? CheckCircle
+      : status === "pending"
+        ? Clock
+        : status === "refunded"
+          ? RefreshCw
+          : XCircle;
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${conf.bg} ${conf.text} ${conf.border}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${conf.bg} ${conf.text} ${conf.border}`}
+    >
       <CreditCard className="h-3.5 w-3.5" />
       {conf.label}
     </span>
@@ -129,9 +241,8 @@ function PlanOfferCard({
 }) {
   const monthlyNum = Number(plan.monthlyPremium);
   const annualNum = Number(plan.annualPremium);
-  const annualSavingsPercent = monthlyNum > 0 && annualNum > 0
-    ? Math.round((1 - (annualNum / (monthlyNum * 12))) * 100)
-    : 15;
+  const annualSavingsPercent =
+    monthlyNum > 0 && annualNum > 0 ? Math.round((1 - annualNum / (monthlyNum * 12)) * 100) : 15;
 
   return (
     <article className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:-translate-y-1 hover:shadow-md hover:border-primary/40">
@@ -189,7 +300,11 @@ function PlanOfferCard({
             <div className="flex items-center gap-2">
               {plan.logoUrl ? (
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white p-1 shadow-sm">
-                  <img src={plan.logoUrl} alt={plan.provider} className="h-full w-full object-contain" />
+                  <img
+                    src={plan.logoUrl}
+                    alt={plan.provider}
+                    className="h-full w-full object-contain"
+                  />
                 </div>
               ) : (
                 <Building2 className="h-5 w-5 text-white/80" />
@@ -224,7 +339,9 @@ function PlanOfferCard({
             </div>
             <div className="rounded-xl border border-border/80 bg-muted/40 p-2.5">
               <p className="text-[11px] font-medium text-muted-foreground">Co-Pay / Rate</p>
-              <p className="mt-0.5 font-bold text-emerald-600">{plan.coveragePercentage}% Covered</p>
+              <p className="mt-0.5 font-bold text-emerald-600">
+                {plan.coveragePercentage}% Covered
+              </p>
             </div>
           </div>
 
@@ -308,7 +425,11 @@ function PlanDetailModal({
             <div className="flex items-start gap-4">
               {plan.logoUrl ? (
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border bg-white p-1.5 shadow-sm">
-                  <img src={plan.logoUrl} alt={plan.provider} className="h-full w-full object-contain" />
+                  <img
+                    src={plan.logoUrl}
+                    alt={plan.provider}
+                    className="h-full w-full object-contain"
+                  />
                 </div>
               ) : (
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -317,7 +438,9 @@ function PlanDetailModal({
               )}
               <div>
                 <div className="flex items-center gap-2">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-primary">{plan.provider}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                    {plan.provider}
+                  </p>
                   {plan.tag && (
                     <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
                       {plan.tag}
@@ -380,30 +503,50 @@ function PlanDetailModal({
             <div className="space-y-6">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-xl border border-primary/20 bg-accent/40 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-primary">Monthly Premium</p>
-                  <p className="mt-1 text-2xl font-bold text-primary">{money(plan.monthlyPremium)}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                    Monthly Premium
+                  </p>
+                  <p className="mt-1 text-2xl font-bold text-primary">
+                    {money(plan.monthlyPremium)}
+                  </p>
                   <p className="mt-1 text-xs text-muted-foreground">Billed monthly via Stripe</p>
                 </div>
                 <div className="rounded-xl border border-border bg-card p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-primary">Annual Premium (Discounted)</p>
-                  <p className="mt-1 text-2xl font-bold text-foreground">{money(plan.annualPremium)}</p>
-                  <p className="mt-1 text-xs text-emerald-600 font-medium">Save on annual single payment</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                    Annual Premium (Discounted)
+                  </p>
+                  <p className="mt-1 text-2xl font-bold text-foreground">
+                    {money(plan.annualPremium)}
+                  </p>
+                  <p className="mt-1 text-xs text-emerald-600 font-medium">
+                    Save on annual single payment
+                  </p>
                 </div>
                 <div className="rounded-xl border border-border bg-card p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Coverage Limit</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Coverage Limit
+                  </p>
                   <p className="mt-1 text-2xl font-bold">{money(plan.coverageLimit)}</p>
                   <p className="mt-1 text-xs text-muted-foreground">Maximum allowable claims</p>
                 </div>
                 <div className="rounded-xl border border-border bg-card p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Co-Pay / Cashless Rate</p>
-                  <p className="mt-1 text-2xl font-bold text-emerald-600">{plan.coveragePercentage}%</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Direct hospital cashless settlement</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Co-Pay / Cashless Rate
+                  </p>
+                  <p className="mt-1 text-2xl font-bold text-emerald-600">
+                    {plan.coveragePercentage}%
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Direct hospital cashless settlement
+                  </p>
                 </div>
               </div>
 
               <div>
                 <h3 className="text-sm font-semibold">About {plan.provider}</h3>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">{plan.providerDescription}</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {plan.providerDescription}
+                </p>
                 <div className="mt-4 grid gap-3 sm:grid-cols-3 text-xs">
                   <a
                     href={`tel:${plan.providerHotline}`}
@@ -462,7 +605,10 @@ function PlanDetailModal({
                 <h3 className="text-sm font-semibold">Included Clinical & Diagnostic Services</h3>
                 <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
                   {plan.includedServices.map((service, i) => (
-                    <div key={i} className="flex items-center gap-2.5 rounded-xl border border-border bg-muted/40 p-3 text-xs font-medium">
+                    <div
+                      key={i}
+                      className="flex items-center gap-2.5 rounded-xl border border-border bg-muted/40 p-3 text-xs font-medium"
+                    >
                       <Activity className="h-4 w-4 shrink-0 text-primary" />
                       <span>{service}</span>
                     </div>
@@ -510,7 +656,10 @@ function PlanDetailModal({
                   <h3 className="text-sm font-semibold">Frequently Asked Questions</h3>
                   <div className="mt-3 space-y-3">
                     {plan.faqs.map((faq, i) => (
-                      <details key={i} className="group rounded-xl border border-border bg-card p-3.5">
+                      <details
+                        key={i}
+                        className="group rounded-xl border border-border bg-card p-3.5"
+                      >
                         <summary className="flex cursor-pointer items-start justify-between gap-4 text-xs font-semibold">
                           {faq.question}
                           <ChevronDown className="h-4 w-4 shrink-0 transition group-open:rotate-180 text-muted-foreground" />
@@ -530,7 +679,10 @@ function PlanDetailModal({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs text-muted-foreground">Subscription starts at</p>
-              <p className="text-2xl font-bold text-primary">{money(plan.monthlyPremium)}<span className="text-xs font-normal text-muted-foreground"> / month</span></p>
+              <p className="text-2xl font-bold text-primary">
+                {money(plan.monthlyPremium)}
+                <span className="text-xs font-normal text-muted-foreground"> / month</span>
+              </p>
             </div>
             <button
               onClick={onPurchase}
@@ -562,7 +714,9 @@ function CompareModal({
         <div className="flex items-center justify-between border-b border-border p-5">
           <div>
             <h2 className="text-xl font-bold">Compare Insurance Plan Offers</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Side-by-side comparison of {plans.length} selected plans</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Side-by-side comparison of {plans.length} selected plans
+            </p>
           </div>
           <button onClick={onClose} className="rounded-lg p-2 hover:bg-muted" aria-label="Close">
             <X className="h-5 w-5" />
@@ -579,9 +733,14 @@ function CompareModal({
                 {plans.map((plan) => (
                   <th key={plan.id} className="min-w-64 px-5 py-4">
                     <div className="space-y-1.5">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-primary">{plan.provider}</p>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                        {plan.provider}
+                      </p>
                       <p className="text-sm font-bold text-foreground">{plan.name}</p>
-                      <p className="text-lg font-bold text-primary">{money(plan.monthlyPremium)}<span className="text-xs font-normal text-muted-foreground">/mo</span></p>
+                      <p className="text-lg font-bold text-primary">
+                        {money(plan.monthlyPremium)}
+                        <span className="text-xs font-normal text-muted-foreground">/mo</span>
+                      </p>
                     </div>
                   </th>
                 ))}
@@ -589,43 +748,69 @@ function CompareModal({
             </thead>
             <tbody className="divide-y divide-border text-sm">
               <tr className="hover:bg-muted/20">
-                <td className="sticky left-0 bg-card px-5 py-3.5 font-medium text-muted-foreground">Annual Option</td>
+                <td className="sticky left-0 bg-card px-5 py-3.5 font-medium text-muted-foreground">
+                  Annual Option
+                </td>
                 {plans.map((plan) => (
-                  <td key={plan.id} className="px-5 py-3.5 font-semibold">{money(plan.annualPremium)}</td>
+                  <td key={plan.id} className="px-5 py-3.5 font-semibold">
+                    {money(plan.annualPremium)}
+                  </td>
                 ))}
               </tr>
               <tr className="hover:bg-muted/20">
-                <td className="sticky left-0 bg-card px-5 py-3.5 font-medium text-muted-foreground">Coverage Limit</td>
+                <td className="sticky left-0 bg-card px-5 py-3.5 font-medium text-muted-foreground">
+                  Coverage Limit
+                </td>
                 {plans.map((plan) => (
-                  <td key={plan.id} className="px-5 py-3.5 font-bold text-foreground">{money(plan.coverageLimit)}</td>
+                  <td key={plan.id} className="px-5 py-3.5 font-bold text-foreground">
+                    {money(plan.coverageLimit)}
+                  </td>
                 ))}
               </tr>
               <tr className="hover:bg-muted/20">
-                <td className="sticky left-0 bg-card px-5 py-3.5 font-medium text-muted-foreground">Co-Pay / Rate</td>
+                <td className="sticky left-0 bg-card px-5 py-3.5 font-medium text-muted-foreground">
+                  Co-Pay / Rate
+                </td>
                 {plans.map((plan) => (
-                  <td key={plan.id} className="px-5 py-3.5 text-emerald-600 font-semibold">{plan.coveragePercentage}% Covered</td>
+                  <td key={plan.id} className="px-5 py-3.5 text-emerald-600 font-semibold">
+                    {plan.coveragePercentage}% Covered
+                  </td>
                 ))}
               </tr>
               <tr className="hover:bg-muted/20">
-                <td className="sticky left-0 bg-card px-5 py-3.5 font-medium text-muted-foreground">Waiting Period</td>
+                <td className="sticky left-0 bg-card px-5 py-3.5 font-medium text-muted-foreground">
+                  Waiting Period
+                </td>
                 {plans.map((plan) => (
-                  <td key={plan.id} className="px-5 py-3.5 text-xs text-muted-foreground">{plan.waitingPeriod}</td>
+                  <td key={plan.id} className="px-5 py-3.5 text-xs text-muted-foreground">
+                    {plan.waitingPeriod}
+                  </td>
                 ))}
               </tr>
               <tr className="hover:bg-muted/20">
-                <td className="sticky left-0 bg-card px-5 py-3.5 font-medium text-muted-foreground">Max Claims / Year</td>
+                <td className="sticky left-0 bg-card px-5 py-3.5 font-medium text-muted-foreground">
+                  Max Claims / Year
+                </td>
                 {plans.map((plan) => (
-                  <td key={plan.id} className="px-5 py-3.5 font-medium">{plan.maximumClaims} claims</td>
+                  <td key={plan.id} className="px-5 py-3.5 font-medium">
+                    {plan.maximumClaims} claims
+                  </td>
                 ))}
               </tr>
               <tr className="hover:bg-muted/20">
-                <td className="sticky left-0 bg-card px-5 py-3.5 font-medium text-muted-foreground">Validity Period</td>
+                <td className="sticky left-0 bg-card px-5 py-3.5 font-medium text-muted-foreground">
+                  Validity Period
+                </td>
                 {plans.map((plan) => (
-                  <td key={plan.id} className="px-5 py-3.5">{plan.validityMonths} months</td>
+                  <td key={plan.id} className="px-5 py-3.5">
+                    {plan.validityMonths} months
+                  </td>
                 ))}
               </tr>
               <tr className="hover:bg-muted/20">
-                <td className="sticky left-0 bg-card px-5 py-4 font-medium text-muted-foreground">Instant Action</td>
+                <td className="sticky left-0 bg-card px-5 py-4 font-medium text-muted-foreground">
+                  Instant Action
+                </td>
                 {plans.map((plan) => (
                   <td key={plan.id} className="px-5 py-4">
                     <button
@@ -659,13 +844,21 @@ function PolicyCard({
   onRetryPayment?: () => void;
   isBusy: boolean;
 }) {
-  const expiresIn = Math.ceil((new Date(policy.expirationDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  const expiresIn = Math.ceil(
+    (new Date(policy.expirationDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+  );
   const isExpiringSoon = expiresIn <= 30 && expiresIn > 0;
-  const coverageUsed = Number(policy.coverageLimit) > 0
-    ? ((Number(policy.coverageLimit) - Number(policy.remainingCoverage)) / Number(policy.coverageLimit)) * 100
-    : 0;
+  const coverageUsed =
+    Number(policy.coverageLimit) > 0
+      ? ((Number(policy.coverageLimit) - Number(policy.remainingCoverage)) /
+          Number(policy.coverageLimit)) *
+        100
+      : 0;
 
-  const isPaymentPendingOrFailed = policy.paymentStatus === "pending" || policy.paymentStatus === "failed" || policy.paymentStatus === "cancelled";
+  const isPaymentPendingOrFailed =
+    policy.paymentStatus === "pending" ||
+    policy.paymentStatus === "failed" ||
+    policy.paymentStatus === "cancelled";
 
   return (
     <article className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:shadow-md">
@@ -695,12 +888,16 @@ function PolicyCard({
           </div>
           <div>
             <p className="text-muted-foreground">Premium Paid</p>
-            <p className="mt-0.5 font-semibold text-primary">{money(policy.premiumAmount)} ({policy.billingCycle ?? "annual"})</p>
+            <p className="mt-0.5 font-semibold text-primary">
+              {money(policy.premiumAmount)} ({policy.billingCycle ?? "annual"})
+            </p>
           </div>
           <div>
             <p className="text-muted-foreground">Valid Through</p>
             <p className="mt-0.5 font-medium text-foreground">
-              {new Date(policy.expirationDate).toLocaleDateString("en-PH", { dateStyle: "medium" })}
+              {safeFormatDate(policy.expirationDate, "policy.expiration_date", "en-PH", {
+                dateStyle: "medium",
+              })}
             </p>
           </div>
         </div>
@@ -708,7 +905,10 @@ function PolicyCard({
         {isExpiringSoon && policy.status === "active" && (
           <div className="flex items-start gap-2 rounded-xl bg-amber-500/10 p-3 text-xs text-amber-800 border border-amber-500/20">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-            <p>Your policy expires in {expiresIn} days. Renew your subscription now to avoid coverage interruption.</p>
+            <p>
+              Your policy expires in {expiresIn} days. Renew your subscription now to avoid coverage
+              interruption.
+            </p>
           </div>
         )}
 
@@ -717,7 +917,9 @@ function PolicyCard({
             <Clock className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
             <div className="flex-1">
               <p className="font-semibold">Stripe Payment Incomplete</p>
-              <p className="mt-0.5 text-muted-foreground">Complete payment through Stripe to activate full cashless healthcare coverage.</p>
+              <p className="mt-0.5 text-muted-foreground">
+                Complete payment through Stripe to activate full cashless healthcare coverage.
+              </p>
             </div>
             {onRetryPayment && (
               <button
@@ -812,8 +1014,8 @@ export default function InsuranceSection({
       prev.find((p) => p.id === plan.id)
         ? prev.filter((p) => p.id !== plan.id)
         : prev.length < 3
-        ? [...prev, plan]
-        : prev
+          ? [...prev, plan]
+          : prev,
     );
   };
 
@@ -843,7 +1045,9 @@ export default function InsuranceSection({
             Accredited Healthcare Plans & Instant Cashless Protection
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Explore and subscribe to accredited HMO, private health plans, and PhilHealth packages with seamless Stripe payment checkout, instant digital policy card issuance, and 100% cashless admission across hospitals in Cebu.
+            Explore and subscribe to accredited HMO, private health plans, and PhilHealth packages
+            with seamless Stripe payment checkout, instant digital policy card issuance, and 100%
+            cashless admission across hospitals in Cebu.
           </p>
           <div className="mt-5 flex flex-wrap gap-3 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-card/60 px-3 py-1 border border-border">
@@ -869,7 +1073,9 @@ export default function InsuranceSection({
           <button
             onClick={() => setActiveTab("browse")}
             className={`inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
-              activeTab === "browse" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+              activeTab === "browse"
+                ? "bg-card text-primary shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Sparkles className="h-4 w-4" />
@@ -881,7 +1087,9 @@ export default function InsuranceSection({
           <button
             onClick={() => setActiveTab("my-insurance")}
             className={`inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
-              activeTab === "my-insurance" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+              activeTab === "my-insurance"
+                ? "bg-card text-primary shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Shield className="h-4 w-4" />
@@ -982,11 +1190,7 @@ export default function InsuranceSection({
                     policy={policy}
                     onRenew={() => onRenew(policy)}
                     onDownload={() => onDownload(policy)}
-                    onRetryPayment={
-                      onRetryPayment
-                        ? () => onRetryPayment(policy)
-                        : undefined
-                    }
+                    onRetryPayment={onRetryPayment ? () => onRetryPayment(policy) : undefined}
                     isBusy={purchaseBusyPolicyId === policy.id}
                   />
                 ))}
@@ -997,9 +1201,12 @@ export default function InsuranceSection({
                   <div className="flex items-start gap-3">
                     <CreditCard className="mt-0.5 h-5 w-5 text-primary" />
                     <div className="flex-1">
-                      <p className="text-sm font-bold text-foreground">Linked Healthcare Invoices</p>
+                      <p className="text-sm font-bold text-foreground">
+                        Linked Healthcare Invoices
+                      </p>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        Your insurance subscription invoices are reconciled in the Billing & Invoices center.
+                        Your insurance subscription invoices are reconciled in the Billing &
+                        Invoices center.
                       </p>
                     </div>
                     <button
@@ -1017,7 +1224,8 @@ export default function InsuranceSection({
               <Shield className="mx-auto h-12 w-12 text-primary/50" />
               <h2 className="mt-3 text-base font-bold">No Active Insurance Subscriptions</h2>
               <p className="mt-1 text-xs text-muted-foreground max-w-sm mx-auto">
-                You currently do not have any active insurance policies linked to your account. Browse our available health offers to get covered.
+                You currently do not have any active insurance policies linked to your account.
+                Browse our available health offers to get covered.
               </p>
               <button
                 onClick={() => setActiveTab("browse")}
@@ -1058,4 +1266,3 @@ export default function InsuranceSection({
     </div>
   );
 }
-

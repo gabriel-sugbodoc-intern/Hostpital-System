@@ -8,9 +8,11 @@ import { sqlDb } from "@/lib/db/sql-db";
 import {
   getStripeConfigServerFn,
   createStripeCheckoutSessionServerFn,
+  createBillPaymentIntentServerFn,
   verifyStripeSessionServerFn,
   processDirectStripePaymentServerFn,
 } from "@/lib/stripe-api";
+import { sendEmailSafe } from "@/lib/brevo-api";
 
 function ok<T>(data: T): { data: T; error?: undefined } {
   return { data };
@@ -151,12 +153,14 @@ const DEFAULT_STORE_PRODUCTS = [
   {
     id: "prod-biogesic-500",
     name: "Biogesic Paracetamol 500mg (20 Tablets)",
-    description: "Gentle and effective relief for headaches, body pain, fever, and minor muscle aches. Safe for empty stomachs.",
+    description:
+      "Gentle and effective relief for headaches, body pain, fever, and minor muscle aches. Safe for empty stomachs.",
     category: "Over-the-Counter",
-    price: 150.00,
+    price: 150.0,
     stock: 85,
     brand: "Unilab",
-    image_url: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop&q=80",
     rating: 4.9,
     review_count: 142,
     prescription_required: false,
@@ -164,12 +168,14 @@ const DEFAULT_STORE_PRODUCTS = [
   {
     id: "prod-neozep-forte",
     name: "Neozep Forte Caplets (10 Caplets)",
-    description: "Fast-acting formula with phenylephrine, chlorphenamine, and paracetamol for colds, runny nose, and sneezing.",
+    description:
+      "Fast-acting formula with phenylephrine, chlorphenamine, and paracetamol for colds, runny nose, and sneezing.",
     category: "Over-the-Counter",
-    price: 125.00,
+    price: 125.0,
     stock: 64,
     brand: "Unilab",
-    image_url: "https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=600&auto=format&fit=crop&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=600&auto=format&fit=crop&q=80",
     rating: 4.8,
     review_count: 98,
     prescription_required: false,
@@ -177,12 +183,14 @@ const DEFAULT_STORE_PRODUCTS = [
   {
     id: "prod-cetirizine-10",
     name: "Cetirizine 10mg Anti-Allergy (10 Tablets)",
-    description: "Long-lasting 24-hour non-drowsy relief from allergic rhinitis, itchy eyes, skin rashes, and urticaria.",
+    description:
+      "Long-lasting 24-hour non-drowsy relief from allergic rhinitis, itchy eyes, skin rashes, and urticaria.",
     category: "Over-the-Counter",
-    price: 95.00,
+    price: 95.0,
     stock: 50,
     brand: "RiteMed",
-    image_url: "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=600&auto=format&fit=crop&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=600&auto=format&fit=crop&q=80",
     rating: 4.7,
     review_count: 64,
     prescription_required: false,
@@ -190,12 +198,14 @@ const DEFAULT_STORE_PRODUCTS = [
   {
     id: "prod-amoxicillin-500",
     name: "Amoxicillin 500mg (21 Capsules - Demo RX)",
-    description: "Broad-spectrum oral antibiotic for bacterial infections. Requires registered physician prescription verification.",
+    description:
+      "Broad-spectrum oral antibiotic for bacterial infections. Requires registered physician prescription verification.",
     category: "Prescription (Demo)",
-    price: 280.00,
+    price: 280.0,
     stock: 40,
     brand: "RiteMed",
-    image_url: "https://images.unsplash.com/photo-1576073719676-aa95576db207?w=600&auto=format&fit=crop&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1576073719676-aa95576db207?w=600&auto=format&fit=crop&q=80",
     rating: 4.8,
     review_count: 52,
     prescription_required: true,
@@ -203,12 +213,14 @@ const DEFAULT_STORE_PRODUCTS = [
   {
     id: "prod-amlodipine-5",
     name: "Amlodipine 5mg Blood Pressure (30 Tablets - Demo RX)",
-    description: "Daily cardiovascular calcium channel blocker for maintenance of blood pressure and angina management.",
+    description:
+      "Daily cardiovascular calcium channel blocker for maintenance of blood pressure and angina management.",
     category: "Prescription (Demo)",
-    price: 195.00,
+    price: 195.0,
     stock: 45,
     brand: "Pharex",
-    image_url: "https://images.unsplash.com/photo-1628771065518-0d82f1938462?w=600&auto=format&fit=crop&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1628771065518-0d82f1938462?w=600&auto=format&fit=crop&q=80",
     rating: 4.9,
     review_count: 78,
     prescription_required: true,
@@ -216,12 +228,14 @@ const DEFAULT_STORE_PRODUCTS = [
   {
     id: "prod-fernc-zinc",
     name: "Fern-C Vitamin C 500mg + Zinc (100 Capsules)",
-    description: "Sodium ascorbate non-acidic immune defense booster that strengthens resistance against colds, fatigue, and daily stress.",
+    description:
+      "Sodium ascorbate non-acidic immune defense booster that strengthens resistance against colds, fatigue, and daily stress.",
     category: "Vitamins & Supplements",
-    price: 480.00,
+    price: 480.0,
     stock: 90,
     brand: "Fern-C",
-    image_url: "https://images.unsplash.com/photo-1550572017-edd951aa8f72?w=600&auto=format&fit=crop&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1550572017-edd951aa8f72?w=600&auto=format&fit=crop&q=80",
     rating: 4.9,
     review_count: 215,
     prescription_required: false,
@@ -229,12 +243,14 @@ const DEFAULT_STORE_PRODUCTS = [
   {
     id: "prod-vitamind3-1000",
     name: "Vitamin D3 1000 IU High Potency (60 Softgels)",
-    description: "Essential vitamin for strong bone density, calcium absorption, muscle function, and robust cellular immunity.",
+    description:
+      "Essential vitamin for strong bone density, calcium absorption, muscle function, and robust cellular immunity.",
     category: "Vitamins & Supplements",
-    price: 540.00,
+    price: 540.0,
     stock: 35,
     brand: "Nature's Way",
-    image_url: "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=600&auto=format&fit=crop&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=600&auto=format&fit=crop&q=80",
     rating: 4.8,
     review_count: 94,
     prescription_required: false,
@@ -242,12 +258,14 @@ const DEFAULT_STORE_PRODUCTS = [
   {
     id: "prod-omron-bp",
     name: "Omron Automatic Upper Arm Blood Pressure Monitor",
-    description: "Hospital-grade accuracy automatic BP meter with IntelliSense technology, memory storage, and cuff fit indicator.",
+    description:
+      "Hospital-grade accuracy automatic BP meter with IntelliSense technology, memory storage, and cuff fit indicator.",
     category: "Medical Devices",
-    price: 2450.00,
+    price: 2450.0,
     stock: 22,
     brand: "Omron Healthcare",
-    image_url: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=600&auto=format&fit=crop&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=600&auto=format&fit=crop&q=80",
     rating: 4.9,
     review_count: 167,
     prescription_required: false,
@@ -255,12 +273,14 @@ const DEFAULT_STORE_PRODUCTS = [
   {
     id: "prod-pulse-oximeter",
     name: "Fingertip Pulse Oximeter with OLED Display",
-    description: "Instantaneous SpO2 blood oxygen saturation and pulse rate monitor with multi-directional display and lanyard.",
+    description:
+      "Instantaneous SpO2 blood oxygen saturation and pulse rate monitor with multi-directional display and lanyard.",
     category: "Medical Devices",
-    price: 750.00,
+    price: 750.0,
     stock: 30,
     brand: "MedTech Pro",
-    image_url: "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=600&auto=format&fit=crop&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=600&auto=format&fit=crop&q=80",
     rating: 4.7,
     review_count: 83,
     prescription_required: false,
@@ -268,12 +288,14 @@ const DEFAULT_STORE_PRODUCTS = [
   {
     id: "prod-first-aid-kit",
     name: "Comprehensive Emergency First Aid Kit (75-Piece)",
-    description: "Compact water-resistant travel bag equipped with bandages, sterile gauze, burn gel, antiseptics, and shears.",
+    description:
+      "Compact water-resistant travel bag equipped with bandages, sterile gauze, burn gel, antiseptics, and shears.",
     category: "First Aid",
-    price: 680.00,
+    price: 680.0,
     stock: 38,
     brand: "St. John Medical",
-    image_url: "https://images.unsplash.com/photo-1603398938378-e54eab446dde?w=600&auto=format&fit=crop&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1603398938378-e54eab446dde?w=600&auto=format&fit=crop&q=80",
     rating: 4.9,
     review_count: 110,
     prescription_required: false,
@@ -281,12 +303,14 @@ const DEFAULT_STORE_PRODUCTS = [
   {
     id: "prod-betadine-120",
     name: "Betadine Antiseptic Povidone-Iodine 10% (120ml)",
-    description: "Antiseptic solution for prompt infection prevention in cuts, scrapes, burns, and wound preparation.",
+    description:
+      "Antiseptic solution for prompt infection prevention in cuts, scrapes, burns, and wound preparation.",
     category: "First Aid",
-    price: 195.00,
+    price: 195.0,
     stock: 55,
     brand: "Mundipharma",
-    image_url: "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=600&auto=format&fit=crop&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=600&auto=format&fit=crop&q=80",
     rating: 4.9,
     review_count: 130,
     prescription_required: false,
@@ -294,12 +318,14 @@ const DEFAULT_STORE_PRODUCTS = [
   {
     id: "prod-n95-masks",
     name: "Medical Grade N95 Respirator Masks (Box of 20)",
-    description: "NIOSH-compliant filtration respirators with nose clip cushioning for high-efficiency airborne particle barrier.",
+    description:
+      "NIOSH-compliant filtration respirators with nose clip cushioning for high-efficiency airborne particle barrier.",
     category: "Medical Supplies",
-    price: 420.00,
+    price: 420.0,
     stock: 95,
     brand: "3M Healthcare",
-    image_url: "https://images.unsplash.com/photo-1586942593568-29361efcd571?w=600&auto=format&fit=crop&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1586942593568-29361efcd571?w=600&auto=format&fit=crop&q=80",
     rating: 4.8,
     review_count: 188,
     prescription_required: false,
@@ -307,12 +333,14 @@ const DEFAULT_STORE_PRODUCTS = [
   {
     id: "prod-alcohol-70",
     name: "Rubbing Alcohol 70% Ethyl with Moisturizer (500ml)",
-    description: "Antiseptic and disinfectant solution killing 99.9% of bacteria and germs with aloe vera skin conditioning.",
+    description:
+      "Antiseptic and disinfectant solution killing 99.9% of bacteria and germs with aloe vera skin conditioning.",
     category: "Personal Care",
-    price: 85.00,
+    price: 85.0,
     stock: 120,
     brand: "Green Cross",
-    image_url: "https://images.unsplash.com/photo-1584744982491-665216d95f8b?w=600&auto=format&fit=crop&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1584744982491-665216d95f8b?w=600&auto=format&fit=crop&q=80",
     rating: 4.9,
     review_count: 310,
     prescription_required: false,
@@ -320,12 +348,14 @@ const DEFAULT_STORE_PRODUCTS = [
   {
     id: "prod-glucometer-strips",
     name: "Accu-Chek Blood Glucose Test Strips (50 Strips)",
-    description: "Fast-fill test strips for accurate self-monitoring blood glucose readings with 5-second test time.",
+    description:
+      "Fast-fill test strips for accurate self-monitoring blood glucose readings with 5-second test time.",
     category: "Medical Supplies",
-    price: 1350.00,
+    price: 1350.0,
     stock: 28,
     brand: "Roche Diagnostics",
-    image_url: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop&q=80",
+    image_url:
+      "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop&q=80",
     rating: 4.8,
     review_count: 75,
     prescription_required: false,
@@ -428,7 +458,9 @@ async function createStoreOrder(order: {
       .in("id", productIds);
     if (productsError) return fail(productsError.message);
 
-    const productMap = new Map<string, (typeof products)[number]>((products ?? []).map((p) => [p.id, p]));
+    const productMap = new Map<string, (typeof products)[number]>(
+      (products ?? []).map((p) => [p.id, p]),
+    );
 
     for (const item of order.items) {
       const product = productMap.get(item.productId);
@@ -472,7 +504,8 @@ async function createStoreOrder(order: {
       })
       .select()
       .single();
-    if (insertError || !newOrder) return fail(insertError?.message ?? "Could not place your order.");
+    if (insertError || !newOrder)
+      return fail(insertError?.message ?? "Could not place your order.");
 
     const { error: itemsError } = await sqlDb.from("order_items").insert(
       lineItems.map((item) => ({
@@ -549,6 +582,219 @@ async function getStoreNotifications() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Cart persistence (per-user, survives re-login)
+// ─────────────────────────────────────────────────────────────────────────────
+
+type CartLine = { productId: string; quantity: number };
+type CartItemRow = { id: string; product_id: string; quantity: number };
+
+function sanitizeCartLines(lines: unknown): CartLine[] {
+  if (!Array.isArray(lines)) return [];
+  const map = new Map<string, number>();
+  for (const line of lines) {
+    const raw = line as Record<string, unknown>;
+    const productId = typeof raw?.productId === "string" ? raw.productId : "";
+    const qty = Math.floor(Number(raw?.quantity ?? 0));
+    if (!productId || !Number.isFinite(qty) || qty < 1) continue;
+    map.set(productId, Math.max(1, Math.min(qty, 99)));
+  }
+  return [...map].map(([productId, quantity]) => ({ productId, quantity }));
+}
+
+function buildCartItems(products: any[], qtyByPid: Map<string, number>) {
+  const productMap = new Map<string, any>(products.map((p: any) => [p.id, p as any]));
+  const items: any[] = [];
+  const notices: string[] = [];
+  for (const [pid, rawQty] of qtyByPid) {
+    const product = productMap.get(pid);
+    if (!product) continue;
+    if ((product.stock ?? 0) <= 0) {
+      notices.push(`${product.name} is out of stock and was removed from your cart.`);
+      continue;
+    }
+    const quantity = Math.max(1, Math.min(rawQty, product.stock));
+    if (quantity !== rawQty) {
+      notices.push(`Only ${product.stock} left of ${product.name}. Quantity adjusted.`);
+    }
+    items.push({ ...mapProduct(product), quantity });
+  }
+  items.sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  return { items, notices };
+}
+
+async function fetchCartRows(userId: string): Promise<CartItemRow[]> {
+  const { data, error } = await sqlDb
+    .from("cart_items")
+    .select("id, product_id, quantity")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as CartItemRow[];
+}
+
+async function fetchCartProducts(ids: string[]) {
+  if (!ids.length) return [] as any[];
+  const { data, error } = await sqlDb.from("products").select("*").in("id", ids);
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+/**
+ * Returns the signed-in user's persisted cart. Rows whose product no longer
+ * exists or is out of stock are removed from the database; quantities above
+ * available stock are clamped — the response explains what changed.
+ */
+async function getCart() {
+  try {
+    const userId = await getUserId();
+    if (!userId) return ok({ items: [], notices: [] });
+
+    const rows = await fetchCartRows(userId);
+    const qtyByPid = new Map(rows.map((r) => [r.product_id, r.quantity]));
+    const products = await fetchCartProducts([...qtyByPid.keys()]);
+    const { items, notices } = buildCartItems(products, qtyByPid);
+
+    // Self-heal persisted rows so stale lines never resurface.
+    const keepIds = new Set(items.map((i: any) => i.id as string));
+    const staleRowIds = rows.filter((r) => !keepIds.has(r.product_id)).map((r) => r.id);
+    if (staleRowIds.length) {
+      await sqlDb.from("cart_items").delete().eq("user_id", userId).in("id", staleRowIds);
+    }
+    for (const item of items) {
+      const row = rows.find((r) => r.product_id === item.id);
+      if (row && row.quantity !== item.quantity) {
+        await sqlDb
+          .from("cart_items")
+          .update({ quantity: item.quantity })
+          .eq("id", row.id)
+          .eq("user_id", userId);
+      }
+    }
+    return ok({ items, notices });
+  } catch (e) {
+    return fail(e instanceof Error ? e.message : "Could not load your saved cart.");
+  }
+}
+
+/**
+ * Merges a guest cart (local storage lines) into the user's persisted cart:
+ * quantities are combined for matching products, new ones are added, and
+ * everything is clamped to current stock. Returns the merged cart.
+ */
+async function mergeGuestCart(lines: CartLine[]) {
+  try {
+    const userId = await getUserId();
+    if (!userId) return fail("You must be signed in to save your cart.");
+
+    const guestMap = new Map(sanitizeCartLines(lines).map((l) => [l.productId, l.quantity]));
+    const rows = await fetchCartRows(userId);
+    const rowMap = new Map(rows.map((r) => [r.product_id, r]));
+
+    const allIds = [...new Set([...guestMap.keys(), ...rowMap.keys()])];
+    const products = await fetchCartProducts(allIds);
+    const productMap = new Map<string, any>(products.map((p: any) => [p.id, p as any]));
+
+    const finalQty = new Map<string, number>();
+    for (const pid of allIds) {
+      const product = productMap.get(pid);
+      const existing = rowMap.get(pid);
+      if (!product || (product.stock ?? 0) <= 0) {
+        if (existing) {
+          await sqlDb.from("cart_items").delete().eq("id", existing.id).eq("user_id", userId);
+        }
+        continue;
+      }
+      const combined = (existing?.quantity ?? 0) + (guestMap.get(pid) ?? 0);
+      if (combined < 1) continue;
+      const quantity = Math.min(combined, product.stock);
+      finalQty.set(pid, quantity);
+      if (existing) {
+        if (existing.quantity !== quantity) {
+          await sqlDb
+            .from("cart_items")
+            .update({ quantity })
+            .eq("id", existing.id)
+            .eq("user_id", userId);
+        }
+      } else {
+        await sqlDb.from("cart_items").insert({ user_id: userId, product_id: pid, quantity });
+      }
+    }
+
+    const { items, notices } = buildCartItems(products, finalQty);
+    return ok({ items, notices });
+  } catch (e) {
+    return fail(e instanceof Error ? e.message : "Could not merge your cart.");
+  }
+}
+
+/**
+ * Reconciles the persisted cart with the client's desired state — inserts,
+ * updates, and deletes are derived server-side so add / set-quantity / remove
+ * can all share one idempotent background call.
+ */
+async function syncCart(lines: CartLine[]) {
+  try {
+    const userId = await getUserId();
+    if (!userId) return fail("You must be signed in to save your cart.");
+
+    const desired = new Map(sanitizeCartLines(lines).map((l) => [l.productId, l.quantity]));
+    const rows = await fetchCartRows(userId);
+    const rowMap = new Map(rows.map((r) => [r.product_id, r]));
+
+    const products = await fetchCartProducts([...new Set([...desired.keys(), ...rowMap.keys()])]);
+    const productMap = new Map<string, any>(products.map((p: any) => [p.id, p as any]));
+
+    for (const row of rows) {
+      const product = productMap.get(row.product_id);
+      const wanted = desired.get(row.product_id);
+      if (!product || (product.stock ?? 0) <= 0 || wanted === undefined) {
+        await sqlDb.from("cart_items").delete().eq("id", row.id).eq("user_id", userId);
+        rowMap.delete(row.product_id);
+      }
+    }
+
+    const finalQty = new Map<string, number>();
+    for (const [pid, qty] of desired) {
+      const product = productMap.get(pid);
+      if (!product || (product.stock ?? 0) <= 0) continue;
+      const quantity = Math.min(qty, product.stock);
+      finalQty.set(pid, quantity);
+
+      const existing = rowMap.get(pid);
+      if (existing) {
+        if (existing.quantity !== quantity) {
+          await sqlDb
+            .from("cart_items")
+            .update({ quantity })
+            .eq("id", existing.id)
+            .eq("user_id", userId);
+        }
+      } else {
+        await sqlDb.from("cart_items").insert({ user_id: userId, product_id: pid, quantity });
+      }
+    }
+
+    const { items } = buildCartItems(products, finalQty);
+    return ok({ items });
+  } catch (e) {
+    return fail(e instanceof Error ? e.message : "Could not save your cart.");
+  }
+}
+
+/** Empties the signed-in user's persisted cart (used after checkout). */
+async function clearCart() {
+  try {
+    const userId = await getUserId();
+    if (!userId) return ok({ cleared: true });
+    await sqlDb.from("cart_items").delete().eq("user_id", userId);
+    return ok({ cleared: true });
+  } catch (e) {
+    return fail(e instanceof Error ? e.message : "Could not clear your saved cart.");
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Insurance
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -556,14 +802,18 @@ function mapPlan(row: any) {
   const monthly = Number(row.monthly_premium ?? 0);
   const annual = Number(row.annual_premium ?? (monthly > 0 ? monthly * 10.2 : 0));
   const covLimit = Number(row.coverage_limit ?? 250000);
-  const covPercent = row.coverage_percentage ?? (100 - Number(row.co_pay_percent ?? 0));
+  const covPercent = row.coverage_percentage ?? 100 - Number(row.co_pay_percent ?? 0);
 
   return {
     id: row.id,
     code: row.code || (row.id ? String(row.id).replace("plan-", "").toUpperCase() : "INS-PLAN"),
     name: row.name || "Comprehensive Health Coverage",
     provider: row.provider || "SugboDoc Health Partners",
-    providerDescription: row.provider_about || row.provider_description || row.description || "Accredited healthcare provider in Cebu.",
+    providerDescription:
+      row.provider_about ||
+      row.provider_description ||
+      row.description ||
+      "Accredited healthcare provider in Cebu.",
     providerHotline: row.provider_hotline || "+63 (32) 255-8000",
     providerWebsite: row.provider_website || "https://sugbodoc.ph/insurance",
     providerEmail: row.provider_email || "care@sugbodoc.ph",
@@ -576,39 +826,71 @@ function mapPlan(row: any) {
     validityMonths: Number(row.validity_months ?? 12),
     tag: row.tag || (covPercent === 100 ? "100% Cashless" : "Verified Offer"),
     category: row.category || row.type || "Comprehensive HMO",
-    benefits: Array.isArray(row.benefits) && row.benefits.length > 0 ? row.benefits : [
-      "Inpatient hospitalization and room & board accommodation",
-      "Unlimited outpatient clinic consultations with accredited specialists",
-      "Annual Physical Examination (APE) and diagnostic health labs",
-      "Emergency room care and ambulance transportation",
-      "Prescription medicine allowance at SugboDoc Medical Store"
-    ],
-    eligibility: Array.isArray(row.eligibility) && row.eligibility.length > 0 ? row.eligibility : [
-      "Ages 18 to 65 years old (renewable up to 75)",
-      "Philippine citizens and legal resident visa holders",
-      "Valid government-issued ID required upon enrollment"
-    ],
-    waitingPeriod: row.waiting_period || "Immediate emergency coverage; zero waiting for outpatient clinic visits",
-    exclusions: Array.isArray(row.exclusions) && row.exclusions.length > 0 ? row.exclusions : [
-      "Elective cosmetic surgery without medical necessity",
-      "Experimental non-FDA certified holistic remedies"
-    ],
-    includedServices: Array.isArray(row.included_services) && row.included_services.length > 0 ? row.included_services : [
-      "Specialist Consultations",
-      "Complete Blood Count (CBC) & Chem Panels",
-      "Chest Radiography & 2D Echo",
-      "Emergency Hospital Admission",
-      "Preventive Health Checkups"
-    ],
+    benefits:
+      Array.isArray(row.benefits) && row.benefits.length > 0
+        ? row.benefits
+        : [
+            "Inpatient hospitalization and room & board accommodation",
+            "Unlimited outpatient clinic consultations with accredited specialists",
+            "Annual Physical Examination (APE) and diagnostic health labs",
+            "Emergency room care and ambulance transportation",
+            "Prescription medicine allowance at SugboDoc Medical Store",
+          ],
+    eligibility:
+      Array.isArray(row.eligibility) && row.eligibility.length > 0
+        ? row.eligibility
+        : [
+            "Ages 18 to 65 years old (renewable up to 75)",
+            "Philippine citizens and legal resident visa holders",
+            "Valid government-issued ID required upon enrollment",
+          ],
+    waitingPeriod:
+      row.waiting_period ||
+      "Immediate emergency coverage; zero waiting for outpatient clinic visits",
+    exclusions:
+      Array.isArray(row.exclusions) && row.exclusions.length > 0
+        ? row.exclusions
+        : [
+            "Elective cosmetic surgery without medical necessity",
+            "Experimental non-FDA certified holistic remedies",
+          ],
+    includedServices:
+      Array.isArray(row.included_services) && row.included_services.length > 0
+        ? row.included_services
+        : [
+            "Specialist Consultations",
+            "Complete Blood Count (CBC) & Chem Panels",
+            "Chest Radiography & 2D Echo",
+            "Emergency Hospital Admission",
+            "Preventive Health Checkups",
+          ],
     maximumClaims: Number(row.maximum_claims ?? 20),
-    renewalPolicy: row.renewal_policy || "Guaranteed annual renewal with preferential discount upon tenure.",
-    termsAndConditions: row.terms_and_conditions || row.description || "Healthcare coverage provided in compliance with Philippine Insurance Commission guidelines. Instant activation upon confirmed Stripe payment.",
-    faqs: Array.isArray(row.faqs) && row.faqs.length > 0 ? row.faqs : [
-      { question: "How soon is my policy activated after Stripe payment?", answer: "Your policy is activated instantly upon confirmed checkout on Stripe." },
-      { question: "Can I use this across Cebu hospitals?", answer: "Yes, all partner hospitals in Cebu and Central Visayas honor cashless card verification." }
-    ],
-    logoUrl: row.logo_url || "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=160&auto=format&fit=crop&q=80",
-    cardImageUrl: row.card_image_url || "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&auto=format&fit=crop&q=80",
+    renewalPolicy:
+      row.renewal_policy || "Guaranteed annual renewal with preferential discount upon tenure.",
+    termsAndConditions:
+      row.terms_and_conditions ||
+      row.description ||
+      "Healthcare coverage provided in compliance with Philippine Insurance Commission guidelines. Instant activation upon confirmed Stripe payment.",
+    faqs:
+      Array.isArray(row.faqs) && row.faqs.length > 0
+        ? row.faqs
+        : [
+            {
+              question: "How soon is my policy activated after Stripe payment?",
+              answer: "Your policy is activated instantly upon confirmed checkout on Stripe.",
+            },
+            {
+              question: "Can I use this across Cebu hospitals?",
+              answer:
+                "Yes, all partner hospitals in Cebu and Central Visayas honor cashless card verification.",
+            },
+          ],
+    logoUrl:
+      row.logo_url ||
+      "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=160&auto=format&fit=crop&q=80",
+    cardImageUrl:
+      row.card_image_url ||
+      "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&auto=format&fit=crop&q=80",
     description: row.description ?? "",
     active: row.is_active !== false && row.active !== false,
   };
@@ -631,7 +913,8 @@ function mapPolicy(row: any) {
     mappedStatus = "pending";
   }
 
-  let paymentStatus: "paid" | "pending" | "overdue" | "failed" | "cancelled" | "refunded" = "pending";
+  let paymentStatus: "paid" | "pending" | "overdue" | "failed" | "cancelled" | "refunded" =
+    "pending";
   const rawPaymentStatus = String(row.payment_status ?? "").toLowerCase();
 
   if (rawPaymentStatus === "paid" || mappedStatus === "active") {
@@ -726,14 +1009,16 @@ async function purchaseInsurance(
       .eq("plan_id", plan.id);
 
     const activePolicy = (existingPolicies ?? []).find(
-      (p) => String(p.status).toLowerCase() === "active"
+      (p) => String(p.status).toLowerCase() === "active",
     );
     if (activePolicy) {
-      return fail(`You already have an active policy (${activePolicy.policy_number}) for ${plan.name}.`);
+      return fail(
+        `You already have an active policy (${activePolicy.policy_number}) for ${plan.name}.`,
+      );
     }
 
     const monthlyAmount = Number(plan.monthly_premium ?? 1850);
-    const annualAmount = Number(plan.annual_premium ?? (monthlyAmount * 10.2));
+    const annualAmount = Number(plan.annual_premium ?? monthlyAmount * 10.2);
     const amount = billingCycle === "monthly" ? monthlyAmount : annualAmount;
 
     // 2. Reuse or create pending policy
@@ -741,7 +1026,7 @@ async function purchaseInsurance(
       (p) =>
         String(p.status).toLowerCase() === "pending payment" ||
         String(p.status).toLowerCase() === "pending_payment" ||
-        String(p.status).toLowerCase() === "pending"
+        String(p.status).toLowerCase() === "pending",
     );
 
     const planCode = plan.code || String(plan.id).replace("plan-", "").toUpperCase();
@@ -767,7 +1052,8 @@ async function purchaseInsurance(
         })
         .select()
         .single();
-      if (policyError || !newPolicy) return fail(policyError?.message ?? "Could not create policy.");
+      if (policyError || !newPolicy)
+        return fail(policyError?.message ?? "Could not create policy.");
       policyRow = newPolicy;
     } else {
       await sqlDb
@@ -988,6 +1274,31 @@ async function createCheckoutSession(
   }
 }
 
+/**
+ * Creates a Stripe PaymentIntent for a bill — feeds the embedded Stripe
+ * Elements card form on the Billing page. Returns { clientSecret } on success.
+ */
+async function createBillPaymentIntent(params: {
+  amount: number;
+  description?: string;
+  billId?: string;
+  invoiceNo?: string;
+}) {
+  try {
+    const result = await createBillPaymentIntentServerFn({ data: params });
+    if (!result.success) {
+      return fail(result.error || "Unable to initialize the card payment.");
+    }
+    return ok({
+      clientSecret: result.clientSecret,
+      paymentIntentId: result.paymentIntentId,
+      amountTotal: result.amountTotal,
+    });
+  } catch (e) {
+    return fail(e instanceof Error ? e.message : "Unable to initialize the card payment.");
+  }
+}
+
 async function getCheckoutSession(sessionId: string) {
   try {
     // Read-only Stripe verification (no DB writes happen server-side).
@@ -1047,7 +1358,11 @@ async function getPaymentHistory() {
     const userId = await getUserId();
     if (!userId) return fail("You must be signed in.");
     const [paymentsRes, billsRes, ordersRes] = await Promise.all([
-      sqlDb.from("payments").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+      sqlDb
+        .from("payments")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false }),
       sqlDb.from("bills").select("*").eq("patient_id", userId),
       sqlDb.from("orders").select("*, order_items(*)").eq("user_id", userId),
     ]);
@@ -1058,21 +1373,39 @@ async function getPaymentHistory() {
 
     const transactions = (paymentsRes.data ?? []).map((row) => {
       // Find matching bill
-      const bill = bills.find((b) => b.id === row.bill_id || (row.description && b.invoice_no && row.description.includes(b.invoice_no)));
-      
+      const bill = bills.find(
+        (b) =>
+          b.id === row.bill_id ||
+          (row.description && b.invoice_no && row.description.includes(b.invoice_no)),
+      );
+
       // Find matching order
-      let order = orders.find((o) => {
+      const order = orders.find((o) => {
         if (row.description && row.description.includes(o.order_no)) return true;
-        if (bill?.invoice_no && o.order_no && bill.invoice_no.replace(/\D/g, "") === o.order_no.replace(/\D/g, "")) return true;
+        if (
+          bill?.invoice_no &&
+          o.order_no &&
+          bill.invoice_no.replace(/\D/g, "") === o.order_no.replace(/\D/g, "")
+        )
+          return true;
         return false;
       });
 
-      const invoiceNo = bill?.invoice_no || (order?.order_no ? `INV-${order.order_no.replace("ORD-", "")}` : undefined);
-      const category = bill?.category || (order || (row.description && row.description.includes("Order")) ? "Medical Store" : "Healthcare");
+      const invoiceNo =
+        bill?.invoice_no ||
+        (order?.order_no ? `INV-${order.order_no.replace("ORD-", "")}` : undefined);
+      const category =
+        bill?.category ||
+        (order || (row.description && row.description.includes("Order"))
+          ? "Medical Store"
+          : "Healthcare");
 
       return {
         id: row.id,
-        description: row.description ?? bill?.description ?? (order ? `Medical Store Order #${order.order_no}` : "Healthcare Payment"),
+        description:
+          row.description ??
+          bill?.description ??
+          (order ? `Medical Store Order #${order.order_no}` : "Healthcare Payment"),
         amount: Number(row.amount ?? 0).toFixed(2),
         status: row.status,
         method: row.method ?? "Stripe",
@@ -1126,15 +1459,21 @@ async function confirmPayment(intentId: string) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Notifications (SMS / Email) — placeholder, no third-party providers configured
+// Notifications (Email via Brevo; SMS still a placeholder)
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function sendSMS(_to: string, _message: string) {
   return ok({ sent: true });
 }
 
-async function sendEmail(_to: string, _subject: string, _html: string, _text?: string) {
-  return ok({ sent: true });
+async function sendEmail(to: string, subject: string, html: string, text?: string) {
+  const result = await sendEmailSafe({
+    to,
+    subject,
+    html,
+    ...(text ? { text } : {}),
+  });
+  return ok(result);
 }
 
 export const storeApi = {
@@ -1143,6 +1482,10 @@ export const storeApi = {
   confirmStoreOrderReceived,
   createStoreOrder,
   getStoreNotifications,
+  getCart,
+  mergeGuestCart,
+  syncCart,
+  clearCart,
   getInsurancePlans,
   getInsurancePolicies,
   purchaseInsurance,
@@ -1150,6 +1493,7 @@ export const storeApi = {
   getInsurancePolicyPdf,
   getPaymentConfig,
   createPaymentIntent,
+  createBillPaymentIntent,
   createCheckoutSession,
   getCheckoutSession,
   processDirectStripePayment,

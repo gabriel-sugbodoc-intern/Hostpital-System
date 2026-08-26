@@ -3,10 +3,11 @@
 //
 // Why: the app's sessions live in browser localStorage, which the server cannot
 // inspect. Raw client-issued tokens are therefore trivially forgeable and must
-// never grant access to Twilio sending. Instead the server issues short-lived
-// HMAC-SHA256-signed tokens; every SMS entry point (HTTP routes AND TanStack
-// server functions) verifies the signature + expiry + role before touching
-// Twilio. Forging a token without SESSION_SECRET is cryptographically infeasible.
+// never grant access to SMS sending (Infobip). Instead the server issues
+// short-lived HMAC-SHA256-signed tokens; every SMS entry point (HTTP routes AND
+// TanStack server functions) verifies the signature + expiry + role before
+// touching Infobip. Forging a token without SESSION_SECRET is cryptographically
+// infeasible.
 //
 // Known prototype limitation: role claims originate from the client-side DB at
 // issuance time. This gate stops anonymous/unauthenticated abuse of the SMS API
@@ -30,7 +31,9 @@ const TOKEN_TTL_SECONDS = 24 * 60 * 60;
 function getSecret(): string {
   const secret = process.env.SESSION_SECRET || "";
   if (!secret && process.env.NODE_ENV === "production") {
-    console.error("[auth] SESSION_SECRET is not set — signed session tokens use an ephemeral dev secret.");
+    console.error(
+      "[auth] SESSION_SECRET is not set — signed session tokens use an ephemeral dev secret.",
+    );
   }
   // Deterministic per-process fallback keeps local/dev flows working.
   return secret || `dev-only-secret-${new Date().toISOString().slice(0, 10)}`;
@@ -56,7 +59,7 @@ async function hmacSign(data: string): Promise<string> {
     new TextEncoder().encode(getSecret()),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign"]
+    ["sign"],
   );
   const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(data));
   return base64UrlEncode(new Uint8Array(sig));
@@ -74,7 +77,9 @@ export async function signSessionToken(user: {
     sub: user.id,
     name: user.name ?? "",
     email: user.email ?? "",
-    role: (["admin", "doctor", "patient"].includes(user.role) ? user.role : "patient") as SmsSessionRole,
+    role: (["admin", "doctor", "patient"].includes(user.role)
+      ? user.role
+      : "patient") as SmsSessionRole,
     iat: now,
     exp: expiresAt,
   };
@@ -83,7 +88,9 @@ export async function signSessionToken(user: {
   return { token: `${body}.${sig}`, expiresAt: expiresAt * 1000 };
 }
 
-export async function verifySessionToken(token: string | undefined | null): Promise<SignedSession | null> {
+export async function verifySessionToken(
+  token: string | undefined | null,
+): Promise<SignedSession | null> {
   if (!token || !token.includes(".")) return null;
   const [body, sig] = token.split(".");
   if (!body || !sig) return null;
@@ -117,7 +124,7 @@ export function extractTokenFromRequest(request: Request): string | undefined {
 /** Server-side guard for raw HTTP routes (src/server.ts). */
 export async function requireRoleFromRequest(
   request: Request,
-  allowedRoles: SmsSessionRole[]
+  allowedRoles: SmsSessionRole[],
 ): Promise<{ ok: true; session: SignedSession } | { ok: false; status: number; error: string }> {
   const session = await verifySessionToken(extractTokenFromRequest(request));
   if (!session) {
@@ -141,8 +148,7 @@ import { createServerFn } from "@tanstack/react-start";
  */
 export const issueSessionTokenServerFn = createServerFn({ method: "POST" })
   .validator(
-    (input: { userId: string; email?: string | null; name?: string | null; role: string }) =>
-      input
+    (input: { userId: string; email?: string | null; name?: string | null; role: string }) => input,
   )
   .handler(async ({ data }) => {
     if (!data?.userId) {

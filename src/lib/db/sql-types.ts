@@ -1,10 +1,4 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[];
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type AppRole = "patient" | "doctor" | "admin";
 
@@ -91,6 +85,35 @@ export type Database = {
           patient_id?: string;
           payment_method?: string | null;
           status?: string;
+        };
+      };
+      cart_items: {
+        Row: {
+          created_at: string;
+          id: string;
+          product_id: string;
+          quantity: number;
+          updated_at: string;
+          user_id: string;
+          variant: Json;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          product_id: string;
+          quantity?: number;
+          updated_at?: string;
+          user_id: string;
+          variant?: Json;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          product_id?: string;
+          quantity?: number;
+          updated_at?: string;
+          user_id?: string;
+          variant?: Json;
         };
       };
       doctors: {

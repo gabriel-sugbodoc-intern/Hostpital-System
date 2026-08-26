@@ -4,11 +4,11 @@ import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { handleStripeWebhookRequest } from "./lib/stripe-api";
 import {
-  getTwilioConfig,
-  testTwilioConnection,
-  sendTwilioSmsDirect,
+  getInfobipConfig,
+  testInfobipConnection,
+  sendInfobipSmsDirect,
   normalizeToE164,
-} from "./lib/twilio-api";
+} from "./lib/infobip-api";
 import { requireRoleFromRequest } from "./lib/session-auth";
 
 type ServerEntry = {
@@ -65,9 +65,9 @@ export default {
         return await handleStripeWebhookRequest(request);
       }
 
-      // ── Twilio routes: staff-only (admin/doctor), verified via the
+      // ── SMS (Infobip) routes: staff-only (admin/doctor), verified via the
       // HMAC-signed session token. Patients are receive-only.
-      if (url.pathname === "/api/twilio/status" && request.method === "GET") {
+      if (url.pathname === "/api/sms/status" && request.method === "GET") {
         const denied = await requireRoleFromRequest(request, ["admin", "doctor"]);
         if (!denied.ok) {
           return new Response(JSON.stringify({ success: false, error: denied.error }), {
@@ -75,13 +75,16 @@ export default {
             headers: { "content-type": "application/json" },
           });
         }
-        const config = getTwilioConfig();
+        const config = getInfobipConfig();
         return new Response(JSON.stringify(config), {
           headers: { "content-type": "application/json" },
         });
       }
 
-      if (url.pathname === "/api/twilio/test" && (request.method === "GET" || request.method === "POST")) {
+      if (
+        url.pathname === "/api/sms/test" &&
+        (request.method === "GET" || request.method === "POST")
+      ) {
         const denied = await requireRoleFromRequest(request, ["admin"]);
         if (!denied.ok) {
           return new Response(JSON.stringify({ connected: false, error: denied.error }), {
@@ -89,13 +92,13 @@ export default {
             headers: { "content-type": "application/json" },
           });
         }
-        const testRes = await testTwilioConnection();
+        const testRes = await testInfobipConnection();
         return new Response(JSON.stringify(testRes), {
           headers: { "content-type": "application/json" },
         });
       }
 
-      if (url.pathname === "/api/twilio/send-sms" && request.method === "POST") {
+      if (url.pathname === "/api/sms/send-sms" && request.method === "POST") {
         const denied = await requireRoleFromRequest(request, ["admin", "doctor"]);
         if (!denied.ok) {
           return new Response(JSON.stringify({ success: false, error: denied.error }), {
@@ -107,35 +110,40 @@ export default {
           const body = await request.json();
           if (!body || typeof body.to !== "string" || typeof body.body !== "string") {
             return new Response(
-              JSON.stringify({ success: false, error: 'Body must be JSON with string fields "to" and "body".' }),
-              { status: 400, headers: { "content-type": "application/json" } }
+              JSON.stringify({
+                success: false,
+                error: 'Body must be JSON with string fields "to" and "body".',
+              }),
+              { status: 400, headers: { "content-type": "application/json" } },
             );
           }
           const normalizedTo = normalizeToE164(body.to);
           if (!normalizedTo) {
             return new Response(
-              JSON.stringify({ success: false, error: `"${body.to}" is not a valid phone number (E.164 expected).` }),
-              { status: 400, headers: { "content-type": "application/json" } }
+              JSON.stringify({
+                success: false,
+                error: `"${body.to}" is not a valid phone number (E.164 expected).`,
+              }),
+              { status: 400, headers: { "content-type": "application/json" } },
             );
           }
-          const result = await sendTwilioSmsDirect({ to: normalizedTo, body: body.body });
+          const result = await sendInfobipSmsDirect({ to: normalizedTo, body: body.body });
           return new Response(JSON.stringify(result), {
             status: result.success ? 200 : 400,
             headers: { "content-type": "application/json" },
           });
-        } catch (e: any) {
-          return new Response(JSON.stringify({ success: false, error: e.message || "Invalid JSON body" }), {
-            status: 400,
-            headers: { "content-type": "application/json" },
-          });
+        } catch (e) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: e instanceof Error ? e.message : "Invalid JSON body",
+            }),
+            {
+              status: 400,
+              headers: { "content-type": "application/json" },
+            },
+          );
         }
-      }
-
-      if (url.pathname === "/api/twilio/webhook" && request.method === "POST") {
-        // Twilio Status Callback or Inbound SMS Webhook
-        return new Response("<Response></Response>", {
-          headers: { "content-type": "text/xml" },
-        });
       }
 
       const handler = await getServerEntry();
@@ -150,4 +158,3 @@ export default {
     }
   },
 };
-
