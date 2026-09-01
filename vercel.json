@@ -1,16 +1,6 @@
 {
   "version": 2,
+  "framework": "nitro",
   "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": null,
-  "installCommand": "npm install",
-  "functions": {
-    "dist/server/index.mjs": {
-      "runtime": "nodejs18.x"
-    }
-  },
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "dist/server/index.mjs" }
-  ]
+  "installCommand": "npm install"
 }
