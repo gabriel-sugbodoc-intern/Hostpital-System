@@ -2,14 +2,8 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { createHash } from "crypto";
 import { handleStripeWebhookRequest } from "./lib/stripe-api";
-import {
-  getInfobipConfig,
-  testInfobipConnection,
-  sendInfobipSmsDirect,
-  normalizeToE164,
-} from "./lib/infobip-api";
-import { requireRoleFromRequest } from "./lib/session-auth";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -65,89 +59,73 @@ export default {
         return await handleStripeWebhookRequest(request);
       }
 
-      // ── SMS (Infobip) routes: staff-only (admin/doctor), verified via the
-      // HMAC-signed session token. Patients are receive-only.
-      if (url.pathname === "/api/sms/status" && request.method === "GET") {
-        const denied = await requireRoleFromRequest(request, ["admin", "doctor"]);
-        if (!denied.ok) {
-          return new Response(JSON.stringify({ success: false, error: denied.error }), {
-            status: denied.status,
-            headers: { "content-type": "application/json" },
-          });
-        }
-        const config = getInfobipConfig();
-        return new Response(JSON.stringify(config), {
-          headers: { "content-type": "application/json" },
-        });
-      }
-
-      if (
-        url.pathname === "/api/sms/test" &&
-        (request.method === "GET" || request.method === "POST")
-      ) {
-        const denied = await requireRoleFromRequest(request, ["admin"]);
-        if (!denied.ok) {
-          return new Response(JSON.stringify({ connected: false, error: denied.error }), {
-            status: denied.status,
-            headers: { "content-type": "application/json" },
-          });
-        }
-        const testRes = await testInfobipConnection();
-        return new Response(JSON.stringify(testRes), {
-          headers: { "content-type": "application/json" },
-        });
-      }
-
-      if (url.pathname === "/api/sms/send-sms" && request.method === "POST") {
-        const denied = await requireRoleFromRequest(request, ["admin", "doctor"]);
-        if (!denied.ok) {
-          return new Response(JSON.stringify({ success: false, error: denied.error }), {
-            status: denied.status,
-            headers: { "content-type": "application/json" },
-          });
-        }
+      // Decode server fn identifier for observability/logging
+      let serverFnName: string | null = null
+      const serverFnPathMatch = url.pathname.match(/_serverFn\/(.+)/)
+      if (serverFnPathMatch) {
         try {
-          const body = await request.json();
-          if (!body || typeof body.to !== "string" || typeof body.body !== "string") {
-            return new Response(
-              JSON.stringify({
-                success: false,
-                error: 'Body must be JSON with string fields "to" and "body".',
-              }),
-              { status: 400, headers: { "content-type": "application/json" } },
-            );
-          }
-          const normalizedTo = normalizeToE164(body.to);
-          if (!normalizedTo) {
-            return new Response(
-              JSON.stringify({
-                success: false,
-                error: `"${body.to}" is not a valid phone number (E.164 expected).`,
-              }),
-              { status: 400, headers: { "content-type": "application/json" } },
-            );
-          }
-          const result = await sendInfobipSmsDirect({ to: normalizedTo, body: body.body });
-          return new Response(JSON.stringify(result), {
-            status: result.success ? 200 : 400,
-            headers: { "content-type": "application/json" },
-          });
-        } catch (e) {
-          return new Response(
-            JSON.stringify({
-              success: false,
-              error: e instanceof Error ? e.message : "Invalid JSON body",
-            }),
-            {
-              status: 400,
-              headers: { "content-type": "application/json" },
-            },
-          );
+          const decoded = JSON.parse(atob(serverFnPathMatch[1]))
+          const fileBase = decoded.file
+            ? decoded.file.split("?").shift().replace("/src/lib/", "").replace(".ts", "")
+            : "unknown"
+          serverFnName = fileBase + "/" + (decoded.export || "unknown")
+        } catch {
+          serverFnName = "decode-error"
         }
+      }
+      if (serverFnName) {
+        console.info("[ServerFn]", serverFnName, "method=", request.method, "path=", url.pathname)
+      }
+
+      // For dbQueryServerFn: clone request to extract identifying fields
+      // without consuming the original stream before framework parsing.
+      const isSqlRpc = serverFnName === "db/sql-rpc/dbQueryServerFn";
+      let clonedRequest: Request | null = null;
+      let detailHeader = "";
+      if (isSqlRpc && request.method === "POST") {
+        clonedRequest = request.clone();
       }
 
       const handler = await getServerEntry();
-      const response = await handler.fetch(request, env, ctx);
+      const response = await handler.fetch(request, env, ctx)
+
+      // Extract identifying query details from cloned request (original stream intact)
+      if (clonedRequest && response) {
+        try {
+          const cloneBody = await clonedRequest.json();
+          // Framework sends payload as { data: QuerySpec, ... }
+          const querySpec = cloneBody?.data ?? cloneBody;
+          const tableName = querySpec?.table || "unknown";
+          const filters = Array.isArray(querySpec?.filters) ? querySpec.filters : [];
+          const filterKeys = filters
+            .map((f: unknown) => (f && typeof f === "object" && (f as any).col) ? (f as any).col : null)
+            .filter((v: unknown) => typeof v === "string")
+            .join(",");
+          // Hash only filter VALUES (not keys) for uniqueness; never include raw PII in header
+          let valueHash = "";
+          if (filters.length > 0) {
+            const valueStr = filters
+              .map((f: unknown) => ((f && typeof f === "object" && (f as any).value !== undefined) ? String((f as any).value) : ""))
+              .join("|");
+            if (valueStr) {
+              valueHash = createHash("sha256").update(valueStr).digest("hex").slice(0, 8);
+            }
+          }
+          const parts: string[] = [`table=${tableName}`];
+          if (filterKeys) parts.push(`filters=${filterKeys}`);
+          if (valueHash) parts.push(`hash=${valueHash}`);
+          detailHeader = parts.join(";");
+        } catch {
+          // Intentionally ignore parse failures — never break response for observability
+        }
+      }
+
+      if (serverFnName && response) {
+        response.headers.set("X-Server-Fn-Name", serverFnName)
+      }
+      if (detailHeader && response) {
+        response.headers.set("X-Server-Fn-Detail", detailHeader)
+      }
       return await normalizeCatastrophicSsrResponse(response);
     } catch (error) {
       console.error(error);

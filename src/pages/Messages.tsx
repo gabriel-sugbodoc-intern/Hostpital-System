@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
-import { Send, ArrowLeft, MoreVertical, Paperclip, MessageSquare, FileCheck, Smartphone } from 'lucide-react';
+import { Send, ArrowLeft, MoreVertical, Paperclip, MessageSquare, FileCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateSoapFromDocument } from '@/lib/mock-data';
 import { apiClient } from '@/lib/api-client';
@@ -388,13 +388,6 @@ export default function Messages() {
                 <p className="text-xs text-muted-foreground line-clamp-2">“{pendingMessage}”</p>
               </div>
             )}
-            <div className="mb-3 flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2 text-[11px] text-muted-foreground">
-              <Smartphone className="w-3.5 h-3.5 shrink-0 text-primary" />
-              <span>
-                Clinic updates may also reach you by SMS on your registered mobile number. SMS replies are not
-                available here — message your doctor in this chat instead.
-              </span>
-            </div>
             <form onSubmit={handleSend} className="flex items-end gap-2">
               <button
                 type="button"

@@ -1459,12 +1459,8 @@ async function confirmPayment(intentId: string) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Notifications (Email via Brevo; SMS still a placeholder)
+// Notifications (Email via Brevo)
 // ─────────────────────────────────────────────────────────────────────────────
-
-async function sendSMS(_to: string, _message: string) {
-  return ok({ sent: true });
-}
 
 async function sendEmail(to: string, subject: string, html: string, text?: string) {
   const result = await sendEmailSafe({
@@ -1499,6 +1495,5 @@ export const storeApi = {
   processDirectStripePayment,
   getPaymentHistory,
   confirmPayment,
-  sendSMS,
   sendEmail,
 };

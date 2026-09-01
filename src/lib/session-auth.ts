@@ -1,18 +1,18 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// HMAC-signed session tokens for privileged server-side operations (SMS).
+// HMAC-signed session tokens for privileged server-side operations.
 //
 // Why: the app's sessions live in browser localStorage, which the server cannot
 // inspect. Raw client-issued tokens are therefore trivially forgeable and must
-// never grant access to SMS sending (Infobip). Instead the server issues
-// short-lived HMAC-SHA256-signed tokens; every SMS entry point (HTTP routes AND
-// TanStack server functions) verifies the signature + expiry + role before
-// touching Infobip. Forging a token without SESSION_SECRET is cryptographically
-// infeasible.
+// never grant access to privileged server-side actions. Instead the server
+// issues short-lived HMAC-SHA256-signed tokens; entry points (HTTP routes AND
+// TanStack server functions) verify the signature + expiry + role before
+// performing privileged actions. Forging a token without SESSION_SECRET is
+// cryptographically infeasible.
 //
 // Known prototype limitation: role claims originate from the client-side DB at
-// issuance time. This gate stops anonymous/unauthenticated abuse of the SMS API
-// and enforces the admin/doctor contract at every layer, but a fully trusted
-// authorization chain requires moving identity to the server.
+// issuance time. This gate stops anonymous/unauthenticated abuse and enforces
+// the admin/doctor contract at every layer, but a fully trusted authorization
+// chain requires moving identity to the server.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type SmsSessionRole = "admin" | "doctor" | "patient";
@@ -144,7 +144,7 @@ import { createServerFn } from "@tanstack/react-start";
 
 /**
  * Issues an HMAC-signed session token for the current app user. The signed
- * token (not the forgeable raw localStorage token) is what SMS endpoints trust.
+ * token (not the forgeable raw localStorage token) is what privileged endpoints trust.
  */
 export const issueSessionTokenServerFn = createServerFn({ method: "POST" })
   .validator(

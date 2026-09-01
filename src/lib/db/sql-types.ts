@@ -419,10 +419,6 @@ export type Database = {
           patient_id: string;
           read: boolean;
           sender: string;
-          sms_error: string | null;
-          sms_from: string | null;
-          sms_status: string | null;
-          sms_to: string | null;
           specialty: string | null;
           text: string | null;
         };
@@ -435,10 +431,6 @@ export type Database = {
           patient_id: string;
           read?: boolean;
           sender?: string;
-          sms_error?: string | null;
-          sms_from?: string | null;
-          sms_status?: string | null;
-          sms_to?: string | null;
           specialty?: string | null;
           text?: string | null;
         };
@@ -451,10 +443,6 @@ export type Database = {
           patient_id?: string;
           read?: boolean;
           sender?: string;
-          sms_error?: string | null;
-          sms_from?: string | null;
-          sms_status?: string | null;
-          sms_to?: string | null;
           specialty?: string | null;
           text?: string | null;
         };

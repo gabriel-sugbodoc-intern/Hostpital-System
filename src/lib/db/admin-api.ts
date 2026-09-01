@@ -4,7 +4,6 @@ import {
   parseApptIdFromText,
   syncPatientEncountersAndAppointments,
 } from "./encounter-sync";
-import { sendInfobipSmsServerFn } from "@/lib/infobip-api";
 import { sendEmailSafe } from "@/lib/brevo-api";
 import { appointmentStatusTemplate } from "@/lib/email-templates";
 
@@ -534,10 +533,6 @@ function mapMessage(row: any) {
     sender: row.sender,
     text: row.text,
     createdAt: row.created_at,
-    smsStatus: row.sms_status,
-    smsTo: row.sms_to,
-    smsFrom: row.sms_from,
-    smsError: row.sms_error,
   };
 }
 
@@ -1675,7 +1670,6 @@ export const adminApi = {
   sendAdminMessage: async (
     patientId: string,
     text: string,
-    sendSms = false,
   ): Promise<Result<any>> => {
     // Role gate: patients are receive-only for SMS and may not use staff
     // messaging at all.
@@ -1714,35 +1708,10 @@ export const adminApi = {
       .select("phone")
       .eq("id", patientId)
       .maybeSingle();
-    let smsResult: any = null;
-
-    if (sendSms) {
-      // Never silently redirect SMS to a hardcoded number — fail clearly
-      // when the patient has no registered phone.
-      if (!patient?.phone) {
-        return fail("This patient has no registered phone number on file. SMS cannot be sent.");
-      }
-      try {
-        smsResult = await sendInfobipSmsServerFn({
-          data: {
-            to: patient.phone,
-            body: text,
-          },
-        });
-      } catch (err: any) {
-        smsResult = { success: false, error: err.message };
-      }
-    }
-
     const insertRow = {
       patient_id: patientId,
       sender: "doctor",
       text,
-      sms_status: sendSms ? (smsResult?.success ? "sent" : "failed") : null,
-      sms_to: sendSms ? (smsResult?.to ?? patient?.phone ?? null) : null,
-      sms_from: sendSms ? (smsResult?.from ?? null) : null,
-      sms_error:
-        sendSms && !smsResult?.success ? (smsResult?.error ?? "SMS delivery failed") : null,
     };
     const { data, error } = await sqlDb
       .from("messages")
@@ -1752,15 +1721,6 @@ export const adminApi = {
     if (error) return fail(error.message);
     return ok({
       message: mapMessage(data),
-      sms: sendSms
-        ? {
-            sent: Boolean(smsResult?.success),
-            sid: smsResult?.messageId ?? null,
-            to: insertRow.sms_to,
-            from: insertRow.sms_from,
-            reason: smsResult?.error,
-          }
-        : undefined,
     });
   },
 

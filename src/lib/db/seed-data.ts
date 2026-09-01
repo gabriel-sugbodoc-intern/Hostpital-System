@@ -1090,10 +1090,6 @@ export const DEFAULT_MESSAGES = [
     text: "Good day, Juan! How are your blood pressure readings after starting the morning dose of Losartan?",
     file_name: null,
     read: true,
-    sms_status: "Delivered",
-    sms_to: "+63 917 123 4567",
-    sms_from: "+63 918 234 5678",
-    sms_error: null,
     created_at: "2026-08-05T09:14:00Z",
   },
   {
@@ -1106,10 +1102,6 @@ export const DEFAULT_MESSAGES = [
     text: "Hello Dr. Santos, my readings have been steady around 122/80 to 126/84. Feeling good and active.",
     file_name: null,
     read: true,
-    sms_status: "Delivered",
-    sms_to: "+63 918 234 5678",
-    sms_from: "+63 917 123 4567",
-    sms_error: null,
     created_at: "2026-08-05T10:02:00Z",
   },
 ];

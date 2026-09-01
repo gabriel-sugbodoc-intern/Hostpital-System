@@ -48,8 +48,6 @@ Patient Medical Records — Access encounters, diagnoses, prescriptions, laborat
 
 Doctor Consultation — Connect and communicate with healthcare providers.
 
-SMS Messaging — Allow patients, doctors, and administrators to communicate through the platform.
-
 Pharmacy / Medical Store — Browse healthcare products, select a store branch, and place orders.
 
 Insurance Management — Browse insurance plans and submit insurance applications.

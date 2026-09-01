@@ -125,19 +125,6 @@ export function appointmentBookedTemplate(data: AppointmentEmailData): EmailCont
   };
 }
 
-/** Short plain-text variant for the booking confirmation SMS (Infobip). */
-export function appointmentBookedSmsText(data: AppointmentEmailData): string {
-  const name = data.patientName?.split(" ")[0];
-  const doctor = data.doctorName || "your assigned doctor";
-  const when = [fmtDate(data.appointmentDate), data.appointmentTime].filter(Boolean).join(", ");
-  return [
-    name ? `SugboDoc: Hi ${name}!` : "SugboDoc:",
-    "Your appointment request has been received.",
-    `${doctor}${when ? ` · ${when}` : ""}.`,
-    "Status: pending clinic confirmation.",
-  ].join(" ");
-}
-
 // ─── Appointment status update ───────────────────────────────────────────────
 
 const STATUS_META: Record<string, { label: string; color: string; intro: string }> = {

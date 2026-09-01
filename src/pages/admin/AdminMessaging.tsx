@@ -8,18 +8,8 @@ import {
   User,
   Search,
   Loader2,
-  Radio,
-  CheckCircle2,
-  AlertTriangle,
-  RefreshCw,
-  X,
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
-import {
-  testInfobipConnectionServerFn,
-  getInfobipConfigServerFn,
-  sendInfobipSmsServerFn,
-} from "@/lib/infobip-api";
 
 type Patient = {
   id: string;
@@ -33,10 +23,6 @@ type Msg = {
   sender: string;
   text?: string | null;
   createdAt: string;
-  smsStatus?: string | null;
-  smsTo?: string | null;
-  smsFrom?: string | null;
-  smsError?: string | null;
 };
 
 export default function AdminMessaging() {
@@ -45,76 +31,12 @@ export default function AdminMessaging() {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [msgText, setMsgText] = useState("");
-  const [sendSms, setSendSms] = useState(true);
   const [loadingPatients, setLoadingPatients] = useState(true);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const [sending, setSending] = useState(false);
 
-  // Infobip Diagnostic Modal State
-  const [showSmsModal, setShowSmsModal] = useState(false);
-  const [testingSms, setTestingSms] = useState(false);
-  const [smsStatus, setSmsStatus] = useState<any>(null);
-  const [testPhoneNumber, setTestPhoneNumber] = useState("+639943894138");
-  const [testMessageBody, setTestMessageBody] = useState(
-    "Hello from SugboDoc Infobip Integration Test!",
-  );
-  const [sendingTestSms, setSendingTestSms] = useState(false);
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
-
-  const checkSmsConnection = async () => {
-    setTestingSms(true);
-    try {
-      const [res, config] = await Promise.all([
-        (testInfobipConnectionServerFn as any)(),
-        (getInfobipConfigServerFn as any)().catch(() => null),
-      ]);
-      setSmsStatus({ ...res, sender: config?.sender });
-      if (res.unauthorized) {
-        toast.error(res.error || "You are not authorized to run SMS diagnostics.");
-      } else if (res.connected) {
-        toast.success(
-          `Infobip connected${typeof res.balance === "number" ? ` — balance: ${res.balance} ${res.currency ?? ""}` : ""}`,
-        );
-      } else {
-        toast.error(`Infobip connection issue: ${res.error || "Check credentials"}`);
-      }
-    } catch (e: any) {
-      setSmsStatus({ connected: false, error: e.message });
-      toast.error("Failed to contact Infobip API");
-    } finally {
-      setTestingSms(false);
-    }
-  };
-
-  const handleSendTestSms = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!testPhoneNumber.trim() || !testMessageBody.trim() || sendingTestSms) return;
-    setSendingTestSms(true);
-    try {
-      const res = await (sendInfobipSmsServerFn as any)({
-        data: {
-          to: testPhoneNumber.trim(),
-          body: testMessageBody.trim(),
-        },
-      });
-      if (res.success) {
-        toast.success(`SMS dispatched successfully via Infobip! ID: ${res.messageId ?? "n/a"}`, {
-          description: `Delivering to ${res.to || testPhoneNumber.trim()}${res.from ? ` from ${res.from}` : ""}`,
-        });
-        void checkSmsConnection();
-      } else if (res.unauthorized) {
-        toast.error(res.error || "You are not authorized to send SMS.");
-      } else {
-        toast.error(`Infobip SMS Error: ${res.error || "Delivery failed"}`);
-      }
-    } catch (e: any) {
-      toast.error(e.message || "SMS test failed");
-    } finally {
-      setSendingTestSms(false);
-    }
-  };
 
   const resizeMessageInput = () => {
     const input = messageInputRef.current;
@@ -172,7 +94,7 @@ export default function AdminMessaging() {
     const submittedText = msgText.trim();
     if (!submittedText || !selectedPatient || sending) return;
     setSending(true);
-    const result = await apiClient.sendAdminMessage(selectedPatient.id, submittedText, sendSms);
+    const result = await apiClient.sendAdminMessage(selectedPatient.id, submittedText);
     if (result.error) {
       setSending(false);
       toast.error(result.error);
@@ -183,17 +105,7 @@ export default function AdminMessaging() {
     setMsgText((current) => (current.trim() === submittedText ? "" : current));
     setSending(false);
     focusMessageInput();
-    const sms = (result.data as any)?.sms;
-    if (sendSms) {
-      if (sms?.sent)
-        toast.success(`Message saved and SMS sent to ${sms.to || "the patient"}.`, {
-          description: `Infobip message ID: ${sms.sid ?? "n/a"}`,
-        });
-      else
-        toast.warning(
-          `Message saved, but SMS delivery failed: ${sms?.reason ?? "Unknown delivery error."}`,
-        );
-    } else toast.success("Message saved to the conversation.");
+    toast.success("Message saved to the conversation.");
   };
 
   const renderPatientList = () => (
@@ -203,18 +115,6 @@ export default function AdminMessaging() {
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between mb-3">
           <h1 className="text-xl font-bold text-foreground">Messaging</h1>
-          <button
-            type="button"
-            onClick={() => {
-              setShowSmsModal(true);
-              if (!smsStatus) void checkSmsConnection();
-            }}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-colors"
-            title="View SMS Gateway Status & Test SMS"
-          >
-            <Radio className="w-3 h-3 animate-pulse text-emerald-500" />
-            SMS
-          </button>
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -313,18 +213,6 @@ export default function AdminMessaging() {
               </h2>
               <p className="text-xs text-muted-foreground">{selectedPatient.email}</p>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                setShowSmsModal(true);
-                if (!smsStatus) void checkSmsConnection();
-              }}
-              className="flex items-center gap-1.5 text-xs text-primary bg-primary/10 hover:bg-primary/20 transition-colors px-2.5 py-1 rounded-full shrink-0"
-              title="Click to check SMS gateway connection"
-            >
-              <Smartphone className="w-3.5 h-3.5" />
-              SMS → {selectedPatient.phone || "No phone on file"}
-            </button>
           </div>
 
           {/* Messages */}
@@ -356,16 +244,13 @@ export default function AdminMessaging() {
                     >
                       {msg.text}
                     </div>
-                    <span className="text-[10px] text-muted-foreground mt-1 px-1">
-                      {isAdmin ? "You" : selectedPatient.name} ·{" "}
-                      {new Date(msg.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                      {isAdmin &&
-                        msg.smsStatus &&
-                        ` · SMS ${msg.smsStatus === "sent" ? "sent" : "failed"}`}
-                    </span>
+                     <span className="text-[10px] text-muted-foreground mt-1 px-1">
+                       {isAdmin ? "You" : selectedPatient.name} ·{" "}
+                       {new Date(msg.createdAt).toLocaleTimeString([], {
+                         hour: "2-digit",
+                         minute: "2-digit",
+                       })}
+                     </span>
                   </div>
                 );
               })
@@ -375,19 +260,6 @@ export default function AdminMessaging() {
 
           {/* Input */}
           <div className="p-4 border-t border-border bg-card shrink-0">
-            <label className="flex items-center gap-2 text-xs text-muted-foreground mb-3 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={sendSms}
-                onChange={(e) => setSendSms(e.target.checked)}
-                className="rounded border-input w-4 h-4"
-              />
-              <Smartphone className="w-3.5 h-3.5 text-primary" />
-              Send via Infobip SMS to{" "}
-              <span className="font-mono text-foreground">
-                {selectedPatient.phone || "No phone on file"}
-              </span>
-            </label>
             <form onSubmit={handleSend} className="flex items-end gap-2">
               <textarea
                 ref={messageInputRef}
@@ -427,160 +299,7 @@ export default function AdminMessaging() {
       {renderPatientList()}
       {renderConversationView()}
 
-      {/* Infobip Diagnostic Modal */}
-      {showSmsModal && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-5 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-primary/10 text-primary">
-                  <Radio className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-base font-semibold text-foreground">
-                    Infobip Gateway Diagnostics
-                  </h2>
-                  <p className="text-xs text-muted-foreground">
-                    Verify credentials and live SMS delivery
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowSmsModal(false)}
-                className="p-1 text-muted-foreground hover:text-foreground rounded-lg"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            {/* Connection Test Box */}
-            <div className="p-3.5 rounded-xl border border-border bg-muted/30 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-foreground">Connection Status</span>
-                <button
-                  type="button"
-                  onClick={checkSmsConnection}
-                  disabled={testingSms}
-                  className="flex items-center gap-1 text-xs text-primary hover:underline disabled:opacity-50"
-                >
-                  <RefreshCw className={`w-3 h-3 ${testingSms ? "animate-spin" : ""}`} />
-                  {testingSms ? "Testing..." : "Test Now"}
-                </button>
-              </div>
-
-              {testingSms ? (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                  Testing Infobip API endpoint authentication…
-                </div>
-              ) : smsStatus ? (
-                smsStatus.connected ? (
-                  <div className="space-y-1 text-xs">
-                    <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
-                      <CheckCircle2 className="w-4 h-4" />
-                      Connected to Infobip Account
-                    </div>
-                    <div className="text-muted-foreground grid grid-cols-2 gap-1 pt-1 text-[11px]">
-                      <div>
-                        Base URL:{" "}
-                        <span className="font-mono text-foreground">
-                          {smsStatus.baseUrl || "configured"}
-                        </span>
-                      </div>
-                      <div>
-                        Balance:{" "}
-                        <span className="font-medium text-foreground">
-                          {typeof smsStatus.balance === "number"
-                            ? `${smsStatus.balance} ${smsStatus.currency ?? ""}`
-                            : "—"}
-                        </span>
-                      </div>
-                      <div>
-                        Sender (From):{" "}
-                        <span className="font-mono text-foreground">{smsStatus.sender || "—"}</span>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-start gap-1.5 text-xs text-destructive">
-                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                    <div>
-                      <div className="font-medium">Connection Error</div>
-                      <div className="text-muted-foreground text-[11px]">{smsStatus.error}</div>
-                    </div>
-                  </div>
-                )
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  Click &ldquo;Test Now&rdquo; to query the Infobip API.
-                </p>
-              )}
-            </div>
-
-            {/* Test SMS Sender Form */}
-            <form onSubmit={handleSendTestSms} className="space-y-3">
-              <h3 className="text-xs font-semibold text-foreground">Send Live Test SMS</h3>
-              <div className="grid grid-cols-2 gap-2 text-[11px]">
-                <div className="p-2 rounded-lg bg-muted/40 border border-border">
-                  <span className="text-muted-foreground block">Sender (From)</span>
-                  <span className="font-mono font-medium text-foreground">
-                    {smsStatus?.sender || "Not configured"}
-                  </span>
-                </div>
-                <div className="p-2 rounded-lg bg-muted/40 border border-border">
-                  <span className="text-muted-foreground block">Default Target (To)</span>
-                  <span className="font-mono font-medium text-foreground">+639943894138</span>
-                </div>
-              </div>
-              <div className="space-y-1">
-                <label className="text-[11px] font-medium text-muted-foreground">
-                  Recipient Phone Number (E.164 format)
-                </label>
-                <input
-                  type="text"
-                  value={testPhoneNumber}
-                  onChange={(e) => setTestPhoneNumber(e.target.value)}
-                  placeholder="+18777804236 or +639171234567"
-                  className="w-full px-3 py-2 text-xs border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary font-mono"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[11px] font-medium text-muted-foreground">
-                  Message Body
-                </label>
-                <textarea
-                  value={testMessageBody}
-                  onChange={(e) => setTestMessageBody(e.target.value)}
-                  rows={2}
-                  className="w-full px-3 py-2 text-xs border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowSmsModal(false)}
-                  className="px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted rounded-lg"
-                >
-                  Close
-                </button>
-                <button
-                  type="submit"
-                  disabled={sendingTestSms || !testPhoneNumber.trim() || !testMessageBody.trim()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg disabled:opacity-50"
-                >
-                  {sendingTestSms ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <Send className="w-3.5 h-3.5" />
-                  )}
-                  Dispatch SMS
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

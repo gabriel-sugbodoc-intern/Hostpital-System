@@ -53,8 +53,8 @@ const services = [
   },
   {
     icon: MessageSquare,
-    title: "SMS Messaging",
-    body: "Patients, doctors, and administrators communicate through the platform.",
+    title: "In-App Messaging",
+    body: "Patients and doctors communicate through secure in-app chat.",
   },
   {
     icon: Pill,

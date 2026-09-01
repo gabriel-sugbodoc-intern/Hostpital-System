@@ -872,7 +872,7 @@ export default function Billing() {
 
                 <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                  Your payment details are encrypted and secure. An SMS receipt will be sent upon
+                  Your payment details are encrypted and secure. A receipt will be sent upon
                   completion.
                 </p>
 

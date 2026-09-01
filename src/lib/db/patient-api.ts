@@ -4,8 +4,7 @@ import {
   syncPatientEncountersAndAppointments,
 } from "./encounter-sync";
 import { sendEmailSafe } from "@/lib/brevo-api";
-import { sendInfobipSmsSafe } from "@/lib/infobip-api";
-import { appointmentBookedTemplate, appointmentBookedSmsText } from "@/lib/email-templates";
+import { appointmentBookedTemplate } from "@/lib/email-templates";
 
 type Ok<T> = { data: T; error?: undefined };
 type Fail = { data?: undefined; error: string };
@@ -405,7 +404,6 @@ export const patientApi = {
     if (!uid) return fail("You must be signed in.");
     const update: Record<string, any> = {};
     const { safeParseDate } = await import("@/lib/date-utils");
-    const { normalizeToE164 } = await import("@/lib/phone");
 
     // dob — accept only empty (→ null) or a parseable date (→ YYYY-MM-DD);
     // anything else is rejected with a traceable log instead of poisoning the
@@ -427,21 +425,10 @@ export const patientApi = {
       }
     }
 
-    // phone — store canonical E.164 (+639…) so every SMS consumer (Infobip)
-    // receives a consistent, directly usable value.
+    // phone — stored as a contact number (display only).
     if ("phone" in profile) {
       const rawPhone = typeof profile.phone === "string" ? profile.phone.trim() : "";
-      if (!rawPhone) {
-        update.phone = null;
-      } else {
-        const e164 = normalizeToE164(rawPhone);
-        if (e164) {
-          update.phone = e164;
-        } else {
-          console.warn("[Profile] invalid phone rejected:", profile.phone);
-          update.phone = rawPhone;
-        }
-      }
+      update.phone = rawPhone || null;
     }
 
     if ("name" in profile) update.name = profile.name;
@@ -508,7 +495,6 @@ export const patientApi = {
 
     // Fire-and-forget confirmation email — never blocks or fails the booking.
     let email: { sent: boolean; reason?: string } = { sent: false, reason: "Skipped" };
-    let sms: { sent: boolean; reason?: string } = { sent: false, reason: "Skipped" };
     try {
       const { data: profile } = await sqlDb
         .from("profiles")
@@ -535,36 +521,13 @@ export const patientApi = {
         email = { sent: false, reason: "Patient profile has no email address." };
       }
 
-      // Fire-and-forget confirmation SMS via Infobip — same non-blocking rules.
-      const { normalizeToE164 } = await import("@/lib/phone");
-      const toPhone = normalizeToE164(profile?.phone);
-      if (toPhone) {
-        const smsResult = await sendInfobipSmsSafe({
-          to: toPhone,
-          body: appointmentBookedSmsText({
-            patientName: profile?.name,
-            doctorName: appointment.doctorName,
-            department: appointment.specialty,
-            clinic: appointment.clinic,
-            appointmentDate: appointment.appointmentDate,
-            appointmentTime: appointment.appointmentTime,
-          }),
-        });
-        sms = {
-          sent: smsResult.success,
-          ...(smsResult.success ? {} : { reason: smsResult.error }),
-        };
-      } else {
-        sms = { sent: false, reason: "Patient profile has no phone number." };
-      }
     } catch (err: any) {
       console.error("[Booking notification] failed:", err?.message);
       if (email.sent === false && email.reason === "Skipped")
         email = { sent: false, reason: err?.message };
-      sms = { sent: false, reason: err?.message };
     }
 
-    return ok({ appointment: mapAppointment(data), email, sms });
+    return ok({ appointment: mapAppointment(data), email });
   },
 
   cancelAppointment: async (id: string) => {

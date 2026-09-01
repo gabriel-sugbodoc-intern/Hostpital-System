@@ -385,7 +385,7 @@ export default function Appointments() {
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground bg-accent/50 rounded-lg p-3">
                         <Bell className="w-3.5 h-3.5 text-primary shrink-0" />
-                        <span>You will receive an SMS and email confirmation after booking.</span>
+                        <span>You will receive an email confirmation after booking.</span>
                       </div>
                       <div className="flex gap-3 pt-2">
                         <button onClick={() => setBookingStep(3)} className="flex-1 py-3 border border-border rounded-lg font-medium hover:bg-muted min-h-[44px]">

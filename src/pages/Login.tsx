@@ -5,7 +5,6 @@ import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { resolveCartForCurrentUser } from "@/lib/cart-sync";
-import { normalizeToE164 } from "@/lib/phone";
 
 type Mode = "login" | "register";
 
@@ -121,18 +120,7 @@ export default function Login({ initialMode = "login" }: { initialMode?: Mode } 
       return;
     }
 
-    // Optional phone — normalize to E.164 (+639…) so Infobip SMS consumers get
-    // a consistent, directly usable value.
-    const rawPhone = regPhone.trim();
-    let normalizedPhone: string | undefined;
-    if (rawPhone) {
-      const e164 = normalizeToE164(rawPhone);
-      if (!e164) {
-        toast.error("Please enter a valid mobile number (e.g. +63 912 345 6789 or 0912 345 6789).");
-        return;
-      }
-      normalizedPhone = e164;
-    }
+    const normalizedPhone = regPhone.trim() || undefined;
 
     setIsLoading(true);
     console.debug("[auth-debug] ui: register submit -> apiClient.register()");
